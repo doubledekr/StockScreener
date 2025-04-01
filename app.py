@@ -98,17 +98,24 @@ def get_market_movers():
                                 stock.company_name = stock_data.get("company_name", symbol)
                                 stock.last_updated = datetime.utcnow()
                             
-                            # Create technical/fundamental results
+                            # Create technical/fundamental results - convert numpy values to native Python types
                             tech_data = stock_data.get("technical_data", {})
                             fund_data = stock_data.get("fundamental_data", {})
                             
+                            # Get values with proper type conversion
+                            current_price = float(tech_data.get("current_price", 0)) if tech_data.get("current_price") is not None else None
+                            sma50 = float(tech_data.get("sma50", 0)) if tech_data.get("sma50") is not None else None
+                            sma100 = float(tech_data.get("sma100", 0)) if tech_data.get("sma100") is not None else None
+                            sma200 = float(tech_data.get("sma200", 0)) if tech_data.get("sma200") is not None else None
+                            sma200_slope = float(tech_data.get("sma200_slope", 0)) if tech_data.get("sma200_slope") is not None else None
+                            
                             result = ScreeningResult(
                                 stock_id=stock.id,
-                                current_price=tech_data.get("current_price"),
-                                sma50=tech_data.get("sma50"),
-                                sma100=tech_data.get("sma100"),
-                                sma200=tech_data.get("sma200"),
-                                sma200_slope=tech_data.get("sma200_slope"),
+                                current_price=current_price,
+                                sma50=sma50,
+                                sma100=sma100,
+                                sma200=sma200,
+                                sma200_slope=sma200_slope,
                                 price_above_sma200=tech_data.get("price_above_sma200", False),
                                 sma200_slope_positive=tech_data.get("sma200_slope_positive", False),
                                 sma50_above_sma200=tech_data.get("sma50_above_sma200", False),
@@ -132,10 +139,16 @@ def get_market_movers():
                                     fundamental = StockFundamentals(stock_id=stock.id)
                                     db.session.add(fundamental)
                                 
-                                fundamental.quarterly_revenue_growth = fund_data.get("quarterly_sales_growth")
-                                fundamental.quarterly_eps_growth = fund_data.get("quarterly_eps_growth")
-                                fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
-                                fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
+                                # Convert any numpy values to Python native types
+                                quarterly_revenue_growth = float(fund_data.get("quarterly_sales_growth", 0)) if fund_data.get("quarterly_sales_growth") is not None else None
+                                quarterly_eps_growth = float(fund_data.get("quarterly_eps_growth", 0)) if fund_data.get("quarterly_eps_growth") is not None else None
+                                estimated_sales_growth = float(fund_data.get("estimated_sales_growth", 0)) if fund_data.get("estimated_sales_growth") is not None else None
+                                estimated_eps_growth = float(fund_data.get("estimated_eps_growth", 0)) if fund_data.get("estimated_eps_growth") is not None else None
+                                
+                                fundamental.quarterly_revenue_growth = quarterly_revenue_growth
+                                fundamental.quarterly_eps_growth = quarterly_eps_growth
+                                fundamental.estimated_sales_growth = estimated_sales_growth
+                                fundamental.estimated_eps_growth = estimated_eps_growth
                                 fundamental.last_updated = datetime.utcnow()
                                 
                                 # Store the raw data for advanced metrics
@@ -144,19 +157,19 @@ def get_market_movers():
                                     'estimates': {'annual': {}}
                                 }
                                 
-                                # Include all available growth metrics in the raw data
+                                # Include all available growth metrics in the raw data - convert to native Python types
                                 annual_estimates = raw_data['estimates']['annual']
-                                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
-                                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
+                                annual_estimates['eps_growth'] = float(fund_data.get("estimated_eps_growth", 0)) if fund_data.get("estimated_eps_growth") is not None else 0
+                                annual_estimates['revenue_growth'] = float(fund_data.get("estimated_sales_growth", 0)) if fund_data.get("estimated_sales_growth") is not None else 0
                                 
                                 if 'current_quarter_growth' in fund_data:
-                                    annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
+                                    annual_estimates['current_quarter_growth'] = float(fund_data.get("current_quarter_growth", 0)) if fund_data.get("current_quarter_growth") is not None else 0
                                 if 'next_quarter_growth' in fund_data:
-                                    annual_estimates['next_quarter_growth'] = fund_data.get("next_quarter_growth")
+                                    annual_estimates['next_quarter_growth'] = float(fund_data.get("next_quarter_growth", 0)) if fund_data.get("next_quarter_growth") is not None else 0
                                 if 'current_year_growth' in fund_data:
-                                    annual_estimates['current_year_growth'] = fund_data.get("current_year_growth")
+                                    annual_estimates['current_year_growth'] = float(fund_data.get("current_year_growth", 0)) if fund_data.get("current_year_growth") is not None else 0
                                 if 'next_5_years_growth' in fund_data:
-                                    annual_estimates['next_5_years_growth'] = fund_data.get("next_5_years_growth")
+                                    annual_estimates['next_5_years_growth'] = float(fund_data.get("next_5_years_growth", 0)) if fund_data.get("next_5_years_growth") is not None else 0
                                     
                                 # Save the raw data
                                 fundamental.set_raw_data(raw_data)
@@ -389,38 +402,39 @@ def get_stock_data(symbol):
                 
                 if result:
                     logger.debug(f"Using cached data for {symbol} from database")
+                    # Convert all data to JSON-serializable formats
                     stock_data = {
                         "symbol": symbol,
                         "company_name": stock.company_name,
                         "technical_data": {
-                            "current_price": result.current_price,
-                            "sma50": result.sma50,
-                            "sma100": result.sma100,
-                            "sma200": result.sma200,
-                            "sma200_slope": result.sma200_slope,
-                            "price_above_sma200": result.price_above_sma200,
-                            "sma200_slope_positive": result.sma200_slope_positive,
-                            "sma50_above_sma200": result.sma50_above_sma200,
-                            "sma100_above_sma200": result.sma100_above_sma200
+                            "current_price": float(result.current_price) if result.current_price is not None else None,
+                            "sma50": float(result.sma50) if result.sma50 is not None else None, 
+                            "sma100": float(result.sma100) if result.sma100 is not None else None,
+                            "sma200": float(result.sma200) if result.sma200 is not None else None,
+                            "sma200_slope": float(result.sma200_slope) if result.sma200_slope is not None else None,
+                            "price_above_sma200": bool(result.price_above_sma200),
+                            "sma200_slope_positive": bool(result.sma200_slope_positive),
+                            "sma50_above_sma200": bool(result.sma50_above_sma200),
+                            "sma100_above_sma200": bool(result.sma100_above_sma200)
                         },
                         "fundamental_data": {
-                            "quarterly_sales_growth_positive": result.quarterly_sales_growth_positive,
-                            "quarterly_eps_growth_positive": result.quarterly_eps_growth_positive,
-                            "estimated_sales_growth_positive": result.estimated_sales_growth_positive,
-                            "estimated_eps_growth_positive": result.estimated_eps_growth_positive
+                            "quarterly_sales_growth_positive": bool(result.quarterly_sales_growth_positive),
+                            "quarterly_eps_growth_positive": bool(result.quarterly_eps_growth_positive),
+                            "estimated_sales_growth_positive": bool(result.estimated_sales_growth_positive),
+                            "estimated_eps_growth_positive": bool(result.estimated_eps_growth_positive)
                         },
                         "chart_data": result.get_chart_data(),
-                        "passes_all_criteria": result.passes_all_criteria
+                        "passes_all_criteria": bool(result.passes_all_criteria)
                     }
                     
                     # Add fundamental metrics if available
                     fundamental = StockFundamentals.query.filter_by(stock_id=stock.id).first()
                     if fundamental:
                         stock_data["fundamental_data"].update({
-                            "quarterly_sales_growth": fundamental.quarterly_revenue_growth,
-                            "quarterly_eps_growth": fundamental.quarterly_eps_growth,
-                            "estimated_sales_growth": fundamental.estimated_sales_growth,
-                            "estimated_eps_growth": fundamental.estimated_eps_growth,
+                            "quarterly_sales_growth": float(fundamental.quarterly_revenue_growth) if fundamental.quarterly_revenue_growth is not None else None,
+                            "quarterly_eps_growth": float(fundamental.quarterly_eps_growth) if fundamental.quarterly_eps_growth is not None else None,
+                            "estimated_sales_growth": float(fundamental.estimated_sales_growth) if fundamental.estimated_sales_growth is not None else None,
+                            "estimated_eps_growth": float(fundamental.estimated_eps_growth) if fundamental.estimated_eps_growth is not None else None,
                             "company_name": stock.company_name
                         })
                         
@@ -429,102 +443,141 @@ def get_stock_data(symbol):
                         if raw_data and 'estimates' in raw_data and 'annual' in raw_data['estimates']:
                             annual_estimates = raw_data['estimates']['annual']
                             if 'current_quarter_growth' in annual_estimates:
-                                stock_data["fundamental_data"]["current_quarter_growth"] = annual_estimates['current_quarter_growth']
+                                stock_data["fundamental_data"]["current_quarter_growth"] = float(annual_estimates['current_quarter_growth']) if annual_estimates['current_quarter_growth'] is not None else None
                             if 'next_quarter_growth' in annual_estimates:
-                                stock_data["fundamental_data"]["next_quarter_growth"] = annual_estimates['next_quarter_growth']
+                                stock_data["fundamental_data"]["next_quarter_growth"] = float(annual_estimates['next_quarter_growth']) if annual_estimates['next_quarter_growth'] is not None else None
                             if 'current_year_growth' in annual_estimates:
-                                stock_data["fundamental_data"]["current_year_growth"] = annual_estimates['current_year_growth']
+                                stock_data["fundamental_data"]["current_year_growth"] = float(annual_estimates['current_year_growth']) if annual_estimates['current_year_growth'] is not None else None
                             if 'next_5_years_growth' in annual_estimates:
-                                stock_data["fundamental_data"]["next_5_years_growth"] = annual_estimates['next_5_years_growth']
+                                stock_data["fundamental_data"]["next_5_years_growth"] = float(annual_estimates['next_5_years_growth']) if annual_estimates['next_5_years_growth'] is not None else None
                     
                     return jsonify({"success": True, "data": stock_data, "cached": True})
         
         # If no cache or cache miss, fetch from API
         logger.debug(f"Fetching fresh data for {symbol} from API")
-        stock_data = screener.get_stock_details(symbol)
+        api_stock_data = screener.get_stock_details(symbol)
         
-        # Save to database if successful
-        if stock_data:
-            # Find or create the stock
-            stock = Stock.query.filter_by(symbol=symbol).first()
-            if not stock:
-                stock = Stock(
-                    symbol=symbol,
-                    company_name=stock_data.get("company_name", symbol)
-                )
-                db.session.add(stock)
-                db.session.flush()
-            else:
-                stock.company_name = stock_data.get("company_name", symbol)
-                stock.last_updated = datetime.utcnow()
+        # Ensure all values are JSON serializable before returning
+        stock_data = {}
+        if api_stock_data:
+            # Make a deep copy with all native Python types
+            stock_data = {
+                "symbol": symbol,
+                "company_name": api_stock_data.get("company_name", symbol),
+                "technical_data": {},
+                "fundamental_data": {},
+                "passes_all_criteria": bool(api_stock_data.get("passes_all_criteria", False))
+            }
             
-            # Create or update technical/fundamental results
-            tech_data = stock_data.get("technical_data", {})
-            fund_data = stock_data.get("fundamental_data", {})
+            # Copy and convert technical data
+            tech_data = api_stock_data.get("technical_data", {})
+            if tech_data:
+                for key, value in tech_data.items():
+                    if key in ["price_above_sma200", "sma200_slope_positive", "sma50_above_sma200", "sma100_above_sma200"]:
+                        stock_data["technical_data"][key] = bool(value)
+                    elif value is not None:
+                        stock_data["technical_data"][key] = float(value)
+                    else:
+                        stock_data["technical_data"][key] = None
             
-            # Create a new screening result
-            result = ScreeningResult(
-                stock_id=stock.id,
-                current_price=tech_data.get("current_price"),
-                sma50=tech_data.get("sma50"),
-                sma100=tech_data.get("sma100"),
-                sma200=tech_data.get("sma200"),
-                sma200_slope=tech_data.get("sma200_slope"),
-                price_above_sma200=tech_data.get("price_above_sma200", False),
-                sma200_slope_positive=tech_data.get("sma200_slope_positive", False),
-                sma50_above_sma200=tech_data.get("sma50_above_sma200", False),
-                sma100_above_sma200=tech_data.get("sma100_above_sma200", False),
-                quarterly_sales_growth_positive=fund_data.get("quarterly_sales_growth_positive", False),
-                quarterly_eps_growth_positive=fund_data.get("quarterly_eps_growth_positive", False),
-                estimated_sales_growth_positive=fund_data.get("estimated_sales_growth_positive", False),
-                estimated_eps_growth_positive=fund_data.get("estimated_eps_growth_positive", False),
-                passes_all_criteria=stock_data.get("passes_all_criteria", False)
-            )
-            
-            # Set chart data
-            if "chart_data" in stock_data:
-                result.set_chart_data(stock_data["chart_data"])
-            
-            db.session.add(result)
-            
-            # Store fundamental data
+            # Copy and convert fundamental data
+            fund_data = api_stock_data.get("fundamental_data", {})
             if fund_data:
-                fundamental = StockFundamentals.query.filter_by(stock_id=stock.id).first()
-                if not fundamental:
-                    fundamental = StockFundamentals(stock_id=stock.id)
-                    db.session.add(fundamental)
-                
-                fundamental.quarterly_revenue_growth = fund_data.get("quarterly_sales_growth")
-                fundamental.quarterly_eps_growth = fund_data.get("quarterly_eps_growth")
-                fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
-                fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
-                fundamental.last_updated = datetime.utcnow()
-                
-                # Store the raw data for advanced metrics
-                raw_data = {
-                    'general': {'name': stock.company_name},
-                    'estimates': {'annual': {}}
-                }
-                
-                # Include all available growth metrics in the raw data
-                annual_estimates = raw_data['estimates']['annual']
-                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
-                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
-                
-                if 'current_quarter_growth' in fund_data:
-                    annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
-                if 'next_quarter_growth' in fund_data:
-                    annual_estimates['next_quarter_growth'] = fund_data.get("next_quarter_growth")
-                if 'current_year_growth' in fund_data:
-                    annual_estimates['current_year_growth'] = fund_data.get("current_year_growth")
-                if 'next_5_years_growth' in fund_data:
-                    annual_estimates['next_5_years_growth'] = fund_data.get("next_5_years_growth")
-                    
-                # Save the raw data
-                fundamental.set_raw_data(raw_data)
+                for key, value in fund_data.items():
+                    if key.endswith("_positive"):
+                        stock_data["fundamental_data"][key] = bool(value)
+                    elif value is not None:
+                        stock_data["fundamental_data"][key] = float(value)
+                    else:
+                        stock_data["fundamental_data"][key] = None
             
-            # Commit changes
-            db.session.commit()
+            # Copy chart data
+            if "chart_data" in api_stock_data:
+                stock_data["chart_data"] = api_stock_data["chart_data"]
+        
+            # Save to database if successful
+            try:
+                # Find or create the stock
+                db_stock = Stock.query.filter_by(symbol=symbol).first()
+                if not db_stock:
+                    db_stock = Stock(
+                        symbol=symbol,
+                        company_name=stock_data.get("company_name", symbol)
+                    )
+                    db.session.add(db_stock)
+                    db.session.flush()
+                else:
+                    db_stock.company_name = stock_data.get("company_name", symbol)
+                    db_stock.last_updated = datetime.utcnow()
+                
+                # Create or update technical/fundamental results
+                # Convert any numpy values to Python native types
+                result = ScreeningResult(
+                    stock_id=db_stock.id,
+                    current_price=stock_data["technical_data"].get("current_price"),
+                    sma50=stock_data["technical_data"].get("sma50"),
+                    sma100=stock_data["technical_data"].get("sma100"),
+                    sma200=stock_data["technical_data"].get("sma200"),
+                    sma200_slope=stock_data["technical_data"].get("sma200_slope"),
+                    price_above_sma200=stock_data["technical_data"].get("price_above_sma200", False),
+                    sma200_slope_positive=stock_data["technical_data"].get("sma200_slope_positive", False),
+                    sma50_above_sma200=stock_data["technical_data"].get("sma50_above_sma200", False),
+                    sma100_above_sma200=stock_data["technical_data"].get("sma100_above_sma200", False),
+                    quarterly_sales_growth_positive=stock_data["fundamental_data"].get("quarterly_sales_growth_positive", False),
+                    quarterly_eps_growth_positive=stock_data["fundamental_data"].get("quarterly_eps_growth_positive", False),
+                    estimated_sales_growth_positive=stock_data["fundamental_data"].get("estimated_sales_growth_positive", False),
+                    estimated_eps_growth_positive=stock_data["fundamental_data"].get("estimated_eps_growth_positive", False),
+                    passes_all_criteria=stock_data.get("passes_all_criteria", False)
+                )
+                
+                # Set chart data
+                if "chart_data" in stock_data:
+                    result.set_chart_data(stock_data["chart_data"])
+                
+                db.session.add(result)
+                
+                # Store fundamental data
+                if fund_data:
+                    fundamental = StockFundamentals.query.filter_by(stock_id=db_stock.id).first()
+                    if not fundamental:
+                        fundamental = StockFundamentals(stock_id=db_stock.id)
+                        db.session.add(fundamental)
+                    
+                    fundamental.quarterly_revenue_growth = stock_data["fundamental_data"].get("quarterly_sales_growth")
+                    fundamental.quarterly_eps_growth = stock_data["fundamental_data"].get("quarterly_eps_growth")
+                    fundamental.estimated_sales_growth = stock_data["fundamental_data"].get("estimated_sales_growth")
+                    fundamental.estimated_eps_growth = stock_data["fundamental_data"].get("estimated_eps_growth")
+                    fundamental.last_updated = datetime.utcnow()
+                    
+                    # Store the raw data for advanced metrics
+                    raw_data = {
+                        'general': {'name': db_stock.company_name},
+                        'estimates': {'annual': {}}
+                    }
+                    
+                    # Include all available growth metrics in the raw data - convert values to native types
+                    annual_estimates = raw_data['estimates']['annual']
+                    annual_estimates['eps_growth'] = stock_data["fundamental_data"].get("estimated_eps_growth", 0)
+                    annual_estimates['revenue_growth'] = stock_data["fundamental_data"].get("estimated_sales_growth", 0)
+                    
+                    if 'current_quarter_growth' in stock_data["fundamental_data"]:
+                        annual_estimates['current_quarter_growth'] = stock_data["fundamental_data"]["current_quarter_growth"]
+                    if 'next_quarter_growth' in stock_data["fundamental_data"]:
+                        annual_estimates['next_quarter_growth'] = stock_data["fundamental_data"]["next_quarter_growth"]
+                    if 'current_year_growth' in stock_data["fundamental_data"]:
+                        annual_estimates['current_year_growth'] = stock_data["fundamental_data"]["current_year_growth"]
+                    if 'next_5_years_growth' in stock_data["fundamental_data"]:
+                        annual_estimates['next_5_years_growth'] = stock_data["fundamental_data"]["next_5_years_growth"]
+                        
+                    # Save the raw data
+                    fundamental.set_raw_data(raw_data)
+                
+                # Commit changes
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Error saving stock data to database: {str(e)}")
+                db.session.rollback()
+                # Continue with returning the data even if database save fails
         
         return jsonify({"success": True, "data": stock_data, "cached": False})
     except Exception as e:

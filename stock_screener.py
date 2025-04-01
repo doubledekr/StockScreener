@@ -362,13 +362,13 @@ class StockScreener:
                 "sma100_above_sma200": current_sma100 > current_sma200
             }
             
-            # Additional data for UI
+            # Additional data for UI - convert numpy values to Python native floats
             metrics = {
-                "current_price": current_price,
-                "sma50": current_sma50,
-                "sma100": current_sma100,
-                "sma200": current_sma200,
-                "sma200_slope": sma200_slope
+                "current_price": float(current_price),
+                "sma50": float(current_sma50),
+                "sma100": float(current_sma100),
+                "sma200": float(current_sma200),
+                "sma200_slope": float(sma200_slope) if sma200_slope is not None else None
             }
             
             # Check if all criteria are met
@@ -424,26 +424,26 @@ class StockScreener:
                 "estimated_eps_growth_positive": eps_growth_est > 0
             }
             
-            # Additional data for UI
+            # Additional data for UI - convert values to native Python types
             metrics = {
-                "quarterly_sales_growth": q_revenue_growth,
-                "quarterly_eps_growth": q_eps_growth,
-                "estimated_sales_growth": sales_growth_est,
-                "estimated_eps_growth": eps_growth_est,
+                "quarterly_sales_growth": float(q_revenue_growth),
+                "quarterly_eps_growth": float(q_eps_growth),
+                "estimated_sales_growth": float(sales_growth_est),
+                "estimated_eps_growth": float(eps_growth_est),
                 "company_name": fundamentals.get('general', {}).get('name', symbol)
             }
             
-            # Add extra growth metrics if available
+            # Add extra growth metrics if available - convert to Python native types
             if 'annual' in estimates:
                 annual_data = estimates['annual']
                 if 'current_quarter_growth' in annual_data:
-                    metrics['current_quarter_growth'] = annual_data['current_quarter_growth']
+                    metrics['current_quarter_growth'] = float(annual_data['current_quarter_growth'] or 0)
                 if 'next_quarter_growth' in annual_data:
-                    metrics['next_quarter_growth'] = annual_data['next_quarter_growth']
+                    metrics['next_quarter_growth'] = float(annual_data['next_quarter_growth'] or 0)
                 if 'current_year_growth' in annual_data:
-                    metrics['current_year_growth'] = annual_data['current_year_growth']
+                    metrics['current_year_growth'] = float(annual_data['current_year_growth'] or 0)
                 if 'next_5_years_growth' in annual_data:
-                    metrics['next_5_years_growth'] = annual_data['next_5_years_growth']
+                    metrics['next_5_years_growth'] = float(annual_data['next_5_years_growth'] or 0)
             
             # Check if all criteria are met
             meets_criteria = all(criteria.values())
@@ -464,13 +464,13 @@ class StockScreener:
         df['sma100'] = self._calculate_sma(df, 100)
         df['sma200'] = self._calculate_sma(df, 200)
         
-        # Format data for Chart.js
+        # Format data for Chart.js - convert pandas series to Python native types
         chart_data = {
-            "dates": df['datetime'].tolist(),
-            "prices": df['close'].tolist(),
-            "sma50": df['sma50'].tolist(),
-            "sma100": df['sma100'].tolist(),
-            "sma200": df['sma200'].tolist()
+            "dates": [str(d) for d in df['datetime'].tolist()],
+            "prices": [float(p) if pd.notna(p) else None for p in df['close'].tolist()],
+            "sma50": [float(p) if pd.notna(p) else None for p in df['sma50'].tolist()],
+            "sma100": [float(p) if pd.notna(p) else None for p in df['sma100'].tolist()],
+            "sma200": [float(p) if pd.notna(p) else None for p in df['sma200'].tolist()]
         }
         
         return chart_data
@@ -548,12 +548,12 @@ class StockScreener:
                     chart_data = self._prepare_chart_data(symbol)
                     
                     # Create a score based on growth metrics for ranking
-                    score = (
-                        fundamental_data.get("quarterly_sales_growth", 0) +
-                        fundamental_data.get("quarterly_eps_growth", 0) +
-                        fundamental_data.get("estimated_sales_growth", 0) +
-                        fundamental_data.get("estimated_eps_growth", 0) +
-                        (technical_data.get("sma200_slope", 0) * 100)  # Give weight to slope
+                    score = float(
+                        float(fundamental_data.get("quarterly_sales_growth", 0)) +
+                        float(fundamental_data.get("quarterly_eps_growth", 0)) +
+                        float(fundamental_data.get("estimated_sales_growth", 0)) +
+                        float(fundamental_data.get("estimated_eps_growth", 0)) +
+                        (float(technical_data.get("sma200_slope", 0)) * 100)  # Give weight to slope
                     )
                     
                     qualified_stocks.append({
