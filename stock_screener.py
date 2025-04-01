@@ -499,6 +499,26 @@ class StockScreener:
                                 'eps': quarter.get('eps', 0)
                             })
                         fund_data['income_statement']['quarterly'] = quarterly
+                        
+                        # Calculate quarterly growth rates directly here
+                        current_q = quarterly[0]
+                        prev_q = quarterly[1]
+                        
+                        # Revenue growth
+                        curr_q_revenue = float(current_q.get('revenue', 0) or 0)
+                        prev_q_revenue = float(prev_q.get('revenue', 0) or 0)
+                        q_revenue_growth = ((curr_q_revenue / prev_q_revenue) - 1) * 100 if prev_q_revenue else 0
+                        
+                        # EPS growth
+                        curr_q_eps = float(current_q.get('eps', 0) or 0)
+                        prev_q_eps = float(prev_q.get('eps', 0) or 0)
+                        q_eps_growth = ((curr_q_eps / prev_q_eps) - 1) * 100 if prev_q_eps else 0
+                        
+                        # Store the calculated growth values
+                        fund_data['quarterly_sales_growth'] = q_revenue_growth
+                        fund_data['quarterly_eps_growth'] = q_eps_growth
+                        
+                        logger.debug(f"{symbol} quarterly growth: sales={q_revenue_growth:.2f}%, eps={q_eps_growth:.2f}%")
             except Exception as e:
                 logger.warning(f"Could not get earnings data for {symbol}: {str(e)}")
             
@@ -699,25 +719,33 @@ class StockScreener:
             income_statement = fundamentals.get('income_statement', {})
             estimates = fundamentals.get('estimates', {})
             
-            # Get quarterly data
-            quarterly = income_statement.get('quarterly', [])
-            if not quarterly or len(quarterly) < 2:
-                logger.warning(f"Insufficient quarterly data for {symbol}")
-                return False, {}
+            # Check if we have pre-calculated growth rates first (from the enhanced earnings endpoint)
+            if 'quarterly_sales_growth' in fundamentals and 'quarterly_eps_growth' in fundamentals:
+                # Use pre-calculated values
+                q_revenue_growth = float(fundamentals['quarterly_sales_growth'])
+                q_eps_growth = float(fundamentals['quarterly_eps_growth'])
+                logger.debug(f"Using pre-calculated growth rates for {symbol}: revenue={q_revenue_growth:.2f}%, eps={q_eps_growth:.2f}%")
+            else:
+                # Fall back to calculating them here
+                # Get quarterly data
+                quarterly = income_statement.get('quarterly', [])
+                if not quarterly or len(quarterly) < 2:
+                    logger.warning(f"Insufficient quarterly data for {symbol}")
+                    return False, {}
+                    
+                # Calculate quarterly growth rates
+                current_q = quarterly[0]
+                prev_q = quarterly[1]
                 
-            # Calculate quarterly growth rates
-            current_q = quarterly[0]
-            prev_q = quarterly[1]
-            
-            # Revenue growth
-            curr_q_revenue = float(current_q.get('revenue', 0) or 0)
-            prev_q_revenue = float(prev_q.get('revenue', 0) or 0)
-            q_revenue_growth = ((curr_q_revenue / prev_q_revenue) - 1) * 100 if prev_q_revenue else 0
-            
-            # EPS growth
-            curr_q_eps = float(current_q.get('eps', 0) or 0)
-            prev_q_eps = float(prev_q.get('eps', 0) or 0)
-            q_eps_growth = ((curr_q_eps / prev_q_eps) - 1) * 100 if prev_q_eps else 0
+                # Revenue growth
+                curr_q_revenue = float(current_q.get('revenue', 0) or 0)
+                prev_q_revenue = float(prev_q.get('revenue', 0) or 0)
+                q_revenue_growth = ((curr_q_revenue / prev_q_revenue) - 1) * 100 if prev_q_revenue else 0
+                
+                # EPS growth
+                curr_q_eps = float(current_q.get('eps', 0) or 0)
+                prev_q_eps = float(prev_q.get('eps', 0) or 0)
+                q_eps_growth = ((curr_q_eps / prev_q_eps) - 1) * 100 if prev_q_eps else 0
             
             # Get estimates
             annual_estimates = estimates.get('annual', {})

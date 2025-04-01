@@ -292,10 +292,10 @@ def screen_stocks():
                             "sma100_above_sma200": result.sma100_above_sma200
                         },
                         "fundamental_data": {
-                            "quarterly_sales_growth": 0,
-                            "quarterly_eps_growth": 0,
-                            "estimated_sales_growth": 0,
-                            "estimated_eps_growth": 0,
+                            "quarterly_sales_growth": stock_fundamentals.quarterly_revenue_growth if stock_fundamentals else 0,
+                            "quarterly_eps_growth": stock_fundamentals.quarterly_eps_growth if stock_fundamentals else 0,
+                            "estimated_sales_growth": stock_fundamentals.estimated_sales_growth if stock_fundamentals else 0,
+                            "estimated_eps_growth": stock_fundamentals.estimated_eps_growth if stock_fundamentals else 0,
                             "quarterly_sales_growth_positive": result.quarterly_sales_growth_positive,
                             "quarterly_eps_growth_positive": result.quarterly_eps_growth_positive,
                             "estimated_sales_growth_positive": result.estimated_sales_growth_positive,
