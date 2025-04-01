@@ -73,6 +73,16 @@ class StockFundamentals(db.Model):
     estimated_sales_growth = db.Column(db.Float)
     estimated_eps_growth = db.Column(db.Float)
     
+    # Analyst data
+    price_target_low = db.Column(db.Float)
+    price_target_avg = db.Column(db.Float)
+    price_target_high = db.Column(db.Float)
+    price_target_upside = db.Column(db.Float)  # Percentage upside from current price to average target
+    analyst_count = db.Column(db.Integer)      # Number of analysts covering the stock
+    buy_ratings = db.Column(db.Integer)        # Number of buy ratings
+    hold_ratings = db.Column(db.Integer)       # Number of hold ratings
+    sell_ratings = db.Column(db.Integer)       # Number of sell ratings
+    
     # Raw JSON data for flexibility
     raw_data = db.Column(db.Text)
     

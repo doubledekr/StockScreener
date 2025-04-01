@@ -193,10 +193,25 @@ def get_market_movers():
                                 fundamental.estimated_eps_growth = estimated_eps_growth
                                 fundamental.last_updated = datetime.utcnow()
                                 
+                                # Store price targets if available
+                                if 'price_target_low' in fund_data:
+                                    fundamental.price_target_low = float(fund_data.get('price_target_low', 0)) if fund_data.get('price_target_low') is not None else None
+                                    fundamental.price_target_avg = float(fund_data.get('price_target_avg', 0)) if fund_data.get('price_target_avg') is not None else None
+                                    fundamental.price_target_high = float(fund_data.get('price_target_high', 0)) if fund_data.get('price_target_high') is not None else None
+                                    fundamental.price_target_upside = float(fund_data.get('price_target_upside', 0)) if fund_data.get('price_target_upside') is not None else None
+                                
+                                # Store analyst ratings if available
+                                if 'analyst_count' in fund_data:
+                                    fundamental.analyst_count = int(fund_data.get('analyst_count', 0)) if fund_data.get('analyst_count') is not None else None
+                                    fundamental.buy_ratings = int(fund_data.get('buy_ratings', 0)) if fund_data.get('buy_ratings') is not None else None
+                                    fundamental.hold_ratings = int(fund_data.get('hold_ratings', 0)) if fund_data.get('hold_ratings') is not None else None
+                                    fundamental.sell_ratings = int(fund_data.get('sell_ratings', 0)) if fund_data.get('sell_ratings') is not None else None
+                                
                                 # Store the raw data for advanced metrics
                                 raw_data = {
                                     'general': {'name': stock.company_name},
-                                    'estimates': {'annual': {}}
+                                    'estimates': {'annual': {}},
+                                    'analyst_data': {}
                                 }
                                 
                                 # Include all available growth metrics in the raw data - convert to native Python types
@@ -276,6 +291,9 @@ def screen_stocks():
                     stock = result.stock
                     chart_data = result.get_chart_data()
                     
+                    # Get the fundamentals data first
+                    stock_fundamentals = StockFundamentals.query.filter_by(stock_id=stock.id).first()
+                    
                     stock_data = {
                         "symbol": stock.symbol,
                         "company_name": stock.company_name,
@@ -304,18 +322,10 @@ def screen_stocks():
                         "chart_data": chart_data
                     }
                     
-                    # If we have fundamental data, use it
-                    fundamentals = StockFundamentals.query.filter_by(stock_id=stock.id).first()
-                    if fundamentals:
-                        stock_data["fundamental_data"].update({
-                            "quarterly_sales_growth": fundamentals.quarterly_revenue_growth,
-                            "quarterly_eps_growth": fundamentals.quarterly_eps_growth,
-                            "estimated_sales_growth": fundamentals.estimated_sales_growth,
-                            "estimated_eps_growth": fundamentals.estimated_eps_growth
-                        })
-                        
+                    # If we have fundamental data with additional metrics, add them
+                    if stock_fundamentals:
                         # Add additional growth metrics from raw data if available
-                        raw_data = fundamentals.get_raw_data()
+                        raw_data = stock_fundamentals.get_raw_data()
                         if raw_data and 'estimates' in raw_data and 'annual' in raw_data['estimates']:
                             annual_estimates = raw_data['estimates']['annual']
                             if 'current_quarter_growth' in annual_estimates:
@@ -413,10 +423,25 @@ def screen_stocks():
                 fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
                 fundamental.last_updated = datetime.utcnow()
                 
+                # Store price targets if available
+                if 'price_target_low' in fund_data:
+                    fundamental.price_target_low = fund_data.get('price_target_low')
+                    fundamental.price_target_avg = fund_data.get('price_target_avg')
+                    fundamental.price_target_high = fund_data.get('price_target_high')
+                    fundamental.price_target_upside = fund_data.get('price_target_upside')
+                
+                # Store analyst ratings if available
+                if 'analyst_count' in fund_data:
+                    fundamental.analyst_count = fund_data.get('analyst_count')
+                    fundamental.buy_ratings = fund_data.get('buy_ratings')
+                    fundamental.hold_ratings = fund_data.get('hold_ratings')
+                    fundamental.sell_ratings = fund_data.get('sell_ratings')
+                
                 # Store the raw data for advanced metrics
                 raw_data = {
                     'general': {'name': stock.company_name},
-                    'estimates': {'annual': {}}
+                    'estimates': {'annual': {}},
+                    'analyst_data': {}
                 }
                 
                 # Include all available growth metrics in the raw data
@@ -514,6 +539,24 @@ def get_stock_data(symbol):
                             "estimated_eps_growth": float(fundamental.estimated_eps_growth) if fundamental.estimated_eps_growth is not None else None,
                             "company_name": stock.company_name
                         })
+                        
+                        # Add price targets if available
+                        if fundamental.price_target_avg is not None:
+                            stock_data["price_targets"] = {
+                                "low": float(fundamental.price_target_low) if fundamental.price_target_low is not None else None,
+                                "avg": float(fundamental.price_target_avg) if fundamental.price_target_avg is not None else None,
+                                "high": float(fundamental.price_target_high) if fundamental.price_target_high is not None else None,
+                                "upside": float(fundamental.price_target_upside) if fundamental.price_target_upside is not None else None
+                            }
+                        
+                        # Add analyst ratings if available
+                        if fundamental.analyst_count is not None:
+                            stock_data["analyst_ratings"] = {
+                                "analyst_count": fundamental.analyst_count,
+                                "buy_ratings": fundamental.buy_ratings,
+                                "hold_ratings": fundamental.hold_ratings,
+                                "sell_ratings": fundamental.sell_ratings
+                            }
                         
                         # Add additional growth metrics from raw data if available
                         raw_data = fundamental.get_raw_data()
@@ -635,10 +678,27 @@ def get_stock_data(symbol):
                     fundamental.estimated_eps_growth = stock_data["fundamental_data"].get("estimated_eps_growth")
                     fundamental.last_updated = datetime.utcnow()
                     
+                    # Store price targets if available from API data
+                    if "price_targets" in api_stock_data and api_stock_data["price_targets"]:
+                        pt = api_stock_data["price_targets"]
+                        fundamental.price_target_low = pt.get('low')
+                        fundamental.price_target_avg = pt.get('avg')
+                        fundamental.price_target_high = pt.get('high') 
+                        fundamental.price_target_upside = pt.get('upside')
+                    
+                    # Store analyst ratings if available from API data
+                    if "analyst_ratings" in api_stock_data and api_stock_data["analyst_ratings"]:
+                        r = api_stock_data["analyst_ratings"]
+                        fundamental.analyst_count = r.get('analyst_count')
+                        fundamental.buy_ratings = r.get('strong_buy', 0) + r.get('buy', 0)
+                        fundamental.hold_ratings = r.get('hold')
+                        fundamental.sell_ratings = r.get('strong_sell', 0) + r.get('sell', 0)
+                    
                     # Store the raw data for advanced metrics
                     raw_data = {
                         'general': {'name': db_stock.company_name},
-                        'estimates': {'annual': {}}
+                        'estimates': {'annual': {}},
+                        'analyst_data': {}
                     }
                     
                     # Include all available growth metrics in the raw data - convert values to native types

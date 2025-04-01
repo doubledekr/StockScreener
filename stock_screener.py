@@ -398,7 +398,8 @@ class StockScreener:
             fund_data = {
                 'general': {'name': symbol},
                 'income_statement': {'quarterly': []},
-                'estimates': {'annual': {}}
+                'estimates': {'annual': {}},
+                'analyst_data': {}  # To store analyst ratings and price targets
             }
             
             # Try to get the company name from profile endpoint
@@ -416,6 +417,69 @@ class StockScreener:
                     self.cache['rate_limited'] = True
                     self.cache['rate_limit_reset'] = time.time() + 60
                     return None
+                    
+                # Try to get price targets data from the price-target endpoint
+                try:
+                    pt_params = {
+                        "symbol": symbol,
+                        "apikey": self.api_key
+                    }
+                    pt_response = requests.get(f"{self.base_url}/price-target", params=pt_params, timeout=10)
+                    pt_data = pt_response.json()
+                    
+                    # Check if we got valid data (might be a premium endpoint requiring Ultra plan or higher)
+                    if isinstance(pt_data, dict) and 'low' in pt_data:
+                        logger.debug(f"Retrieved price targets for {symbol}")
+                        fund_data['analyst_data']['price_target'] = {
+                            'low': pt_data.get('low'),
+                            'high': pt_data.get('high'),
+                            'avg': pt_data.get('avg'),
+                            'median': pt_data.get('median', None),
+                            'upside': pt_data.get('upside')
+                        }
+                    elif isinstance(pt_data, dict) and pt_data.get('code') == 429:
+                        logger.warning(f"Rate limit exceeded for price targets: {pt_data.get('message')}")
+                        self.cache['rate_limited'] = True
+                        self.cache['rate_limit_reset'] = time.time() + 60
+                    elif isinstance(pt_data, dict) and pt_data.get('code') in [401, 403]:
+                        logger.warning(f"Premium endpoint access denied for price targets: {pt_data.get('message')}")
+                    else:
+                        logger.warning(f"Unexpected response for price targets: {pt_data}")
+                except Exception as e:
+                    logger.warning(f"Error fetching price targets for {symbol}: {str(e)}")
+                
+                # Try to get analyst ratings from the analysts endpoint
+                try:
+                    rating_params = {
+                        "symbol": symbol,
+                        "apikey": self.api_key
+                    }
+                    rating_response = requests.get(f"{self.base_url}/analysts", params=rating_params, timeout=10)
+                    rating_data = rating_response.json()
+                    
+                    # Check if we got valid data (might be a premium endpoint requiring Ultra plan or higher)
+                    if isinstance(rating_data, dict) and 'rating' in rating_data:
+                        logger.debug(f"Retrieved analyst ratings for {symbol}")
+                        r = rating_data['rating']
+                        fund_data['analyst_data']['ratings'] = {
+                            'strong_buy': r.get('strongBuy', 0),
+                            'buy': r.get('buy', 0),
+                            'hold': r.get('hold', 0),
+                            'sell': r.get('sell', 0),
+                            'strong_sell': r.get('strongSell', 0),
+                            'analyst_count': rating_data.get('numberOfAnalysts', 0),
+                            'rating_score': rating_data.get('consensus', None)
+                        }
+                    elif isinstance(rating_data, dict) and rating_data.get('code') == 429:
+                        logger.warning(f"Rate limit exceeded for analyst ratings: {rating_data.get('message')}")
+                        self.cache['rate_limited'] = True
+                        self.cache['rate_limit_reset'] = time.time() + 60
+                    elif isinstance(rating_data, dict) and rating_data.get('code') in [401, 403]:
+                        logger.warning(f"Premium endpoint access denied for analyst ratings: {rating_data.get('message')}")
+                    else:
+                        logger.warning(f"Unexpected response for analyst ratings: {rating_data}")
+                except Exception as e:
+                    logger.warning(f"Error fetching analyst ratings for {symbol}: {str(e)}")
                 
                 if response.status_code == 200 and isinstance(data, dict) and 'name' in data:
                     fund_data['general']['name'] = data['name']
@@ -521,6 +585,92 @@ class StockScreener:
                         logger.debug(f"{symbol} quarterly growth: sales={q_revenue_growth:.2f}%, eps={q_eps_growth:.2f}%")
             except Exception as e:
                 logger.warning(f"Could not get earnings data for {symbol}: {str(e)}")
+            
+            # Check if we hit the rate limit
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                return None
+            
+            # Try to get price target data (premium endpoint - may return 401 if not subscribed)
+            try:
+                params = {
+                    "symbol": symbol,
+                    "apikey": self.api_key
+                }
+                response = requests.get(f"{self.base_url}/price_target", params=params, timeout=10)
+                price_target_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(price_target_data, dict) and price_target_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {price_target_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
+                # Extract price target data if available (will be 401 if not subscribed to Ultra plan)
+                if response.status_code == 200 and 'price_target' in price_target_data:
+                    pt = price_target_data['price_target']
+                    fund_data['analyst_data']['price_target'] = {
+                        'low': float(pt.get('low', 0) or 0),
+                        'high': float(pt.get('high', 0) or 0),
+                        'avg': float(pt.get('average', 0) or 0),
+                        'median': float(pt.get('median', 0) or 0),
+                        'current': float(pt.get('current', 0) or 0)
+                    }
+                    
+                    # Calculate upside percentage
+                    if pt.get('current') and pt.get('average'):
+                        current = float(pt.get('current', 0) or 0)
+                        avg_target = float(pt.get('average', 0) or 0)
+                        upside = ((avg_target / current) - 1) * 100 if current else 0
+                        fund_data['analyst_data']['price_target']['upside'] = upside
+                    
+                    logger.debug(f"Successfully got price target data for {symbol}")
+            except Exception as e:
+                logger.warning(f"Could not get price target data for {symbol}: {str(e)}")
+            
+            # Check if we hit the rate limit
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                return None
+            
+            # Try to get analyst recommendations (premium endpoint - may return 401 if not subscribed)
+            try:
+                params = {
+                    "symbol": symbol,
+                    "apikey": self.api_key
+                }
+                response = requests.get(f"{self.base_url}/recommendations", params=params, timeout=10)
+                recommendations_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(recommendations_data, dict) and recommendations_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {recommendations_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
+                # Extract recommendations data if available (will be 401 if not subscribed to Ultra plan)
+                if response.status_code == 200 and 'trends' in recommendations_data:
+                    current_month = recommendations_data['trends'].get('current_month', {})
+                    fund_data['analyst_data']['ratings'] = {
+                        'strong_buy': int(current_month.get('strong_buy', 0) or 0),
+                        'buy': int(current_month.get('buy', 0) or 0),
+                        'hold': int(current_month.get('hold', 0) or 0),
+                        'sell': int(current_month.get('sell', 0) or 0),
+                        'strong_sell': int(current_month.get('strong_sell', 0) or 0),
+                        'rating_score': float(recommendations_data.get('rating', 0) or 0)
+                    }
+                    
+                    # Calculate total analyst count
+                    total_analysts = (int(current_month.get('strong_buy', 0) or 0) +
+                                     int(current_month.get('buy', 0) or 0) +
+                                     int(current_month.get('hold', 0) or 0) +
+                                     int(current_month.get('sell', 0) or 0) +
+                                     int(current_month.get('strong_sell', 0) or 0))
+                    fund_data['analyst_data']['ratings']['analyst_count'] = total_analysts
+                    
+                    logger.debug(f"Successfully got analyst recommendations for {symbol}")
+            except Exception as e:
+                logger.warning(f"Could not get analyst recommendations for {symbol}: {str(e)}")
             
             # Check if we hit the rate limit
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
@@ -815,6 +965,28 @@ class StockScreener:
             metrics["meets_all_fundamental_criteria"] = meets_all_criteria
             metrics["meets_relaxed_fundamental_criteria"] = meets_relaxed_criteria
             
+            # Extract price targets and analyst ratings from the fundamental data if available
+            if 'analyst_data' in fundamentals:
+                # Price targets
+                if 'price_target' in fundamentals['analyst_data']:
+                    pt = fundamentals['analyst_data']['price_target']
+                    metrics.update({
+                        'price_target_low': float(pt.get('low', 0) or 0),
+                        'price_target_avg': float(pt.get('avg', 0) or 0),
+                        'price_target_high': float(pt.get('high', 0) or 0),
+                        'price_target_upside': float(pt.get('upside', 0) or 0)
+                    })
+                
+                # Analyst ratings
+                if 'ratings' in fundamentals['analyst_data']:
+                    r = fundamentals['analyst_data']['ratings']
+                    metrics.update({
+                        'analyst_count': int(r.get('analyst_count', 0) or 0),
+                        'buy_ratings': int(r.get('strong_buy', 0) or 0) + int(r.get('buy', 0) or 0),
+                        'hold_ratings': int(r.get('hold', 0) or 0),
+                        'sell_ratings': int(r.get('sell', 0) or 0) + int(r.get('strong_sell', 0) or 0)
+                    })
+            
             # Detailed logging to understand which criteria are being met/missed
             logger.debug(
                 f"{symbol} metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}, "
@@ -822,6 +994,20 @@ class StockScreener:
                 f"q_rev_growth: {q_revenue_growth:.1f}%, q_eps_growth: {q_eps_growth:.1f}%, "
                 f"est_sales_growth: {sales_growth_est:.1f}%, est_eps_growth: {eps_growth_est:.1f}%"
             )
+            
+            # Log price targets and analyst ratings if available
+            if 'price_target_avg' in metrics:
+                logger.debug(
+                    f"{symbol} price targets: low=${metrics['price_target_low']:.2f}, "
+                    f"avg=${metrics['price_target_avg']:.2f}, high=${metrics['price_target_high']:.2f}, "
+                    f"upside={metrics['price_target_upside']:.2f}%"
+                )
+            
+            if 'analyst_count' in metrics:
+                logger.debug(
+                    f"{symbol} analyst ratings: {metrics['analyst_count']} analysts, "
+                    f"buy={metrics['buy_ratings']}, hold={metrics['hold_ratings']}, sell={metrics['sell_ratings']}"
+                )
             
             return meets_criteria, {**criteria, **metrics}
         except Exception as e:
@@ -935,11 +1121,44 @@ class StockScreener:
         meets_all_fundamental = fundamental_data.get("meets_all_fundamental_criteria", False) if fundamental_data else False
         meets_all_criteria = meets_all_technical and meets_all_fundamental
         
+        # Extract price targets and analyst ratings from fundamental data
+        price_targets = {}
+        analyst_ratings = {}
+        
+        # Retrieve fundamental data object which might contain analyst data
+        fundamental_obj = self._fetch_fundamentals(symbol)
+        if fundamental_obj and 'analyst_data' in fundamental_obj:
+            # Price targets
+            if 'price_target' in fundamental_obj['analyst_data']:
+                pt = fundamental_obj['analyst_data']['price_target']
+                price_targets = {
+                    'low': pt.get('low', 0),
+                    'high': pt.get('high', 0),
+                    'avg': pt.get('avg', 0),
+                    'median': pt.get('median', 0),
+                    'upside': pt.get('upside', 0)
+                }
+            
+            # Analyst ratings
+            if 'ratings' in fundamental_obj['analyst_data']:
+                r = fundamental_obj['analyst_data']['ratings']
+                analyst_ratings = {
+                    'strong_buy': r.get('strong_buy', 0),
+                    'buy': r.get('buy', 0),
+                    'hold': r.get('hold', 0),
+                    'sell': r.get('sell', 0),
+                    'strong_sell': r.get('strong_sell', 0),
+                    'analyst_count': r.get('analyst_count', 0),
+                    'rating_score': r.get('rating_score', 0)
+                }
+        
         return {
             "symbol": symbol,
             "company_name": company_name,
             "technical_data": technical_data if technical_data else price_data,
             "fundamental_data": fundamental_data,
+            "price_targets": price_targets,
+            "analyst_ratings": analyst_ratings,
             "chart_data": chart_data,
             "passes_all_criteria": technical_passed and fundamental_passed,  # Using relaxed approach (backwards compatible)
             "meets_all_criteria": meets_all_criteria  # New strict approach - ALL criteria must be met
