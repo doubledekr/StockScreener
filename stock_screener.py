@@ -2,10 +2,32 @@ import logging
 import requests
 import pandas as pd
 import numpy as np
+import json
 from datetime import datetime, timedelta
 import time
 
 logger = logging.getLogger(__name__)
+
+# Custom JSON encoder to handle non-serializable types
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        # Handle numpy types
+        if isinstance(o, (np.integer, np.int64, np.int32)):
+            return int(o)
+        elif isinstance(o, (np.floating, np.float64, np.float32)):
+            return float(o)
+        elif isinstance(o, (np.ndarray,)):
+            return o.tolist()
+        elif isinstance(o, (np.bool_)):
+            return bool(o)
+        # Handle datetime objects
+        elif isinstance(o, datetime):
+            return o.isoformat()
+        # Handle native Python bool (for redundancy)
+        elif isinstance(o, bool):
+            return bool(o)
+        # Let the base class handle other types or raise TypeError
+        return super(CustomJSONEncoder, self).default(o)
 
 class StockScreener:
     def __init__(self, api_key):

@@ -229,25 +229,30 @@ def screen_stocks():
         
         # Check if we have recent cached results
         if use_cache:
-            cache_date = datetime.utcnow() - timedelta(hours=cache_hours)
-            
-            # Use a subquery to get the most recent screening result for each stock
-            subquery = db.session.query(
-                ScreeningResult.stock_id,
-                db.func.max(ScreeningResult.screening_date).label('max_date')
-            ).filter(
-                ScreeningResult.passes_all_criteria == True,
-                ScreeningResult.screening_date >= cache_date
-            ).group_by(ScreeningResult.stock_id).subquery()
-            
-            # Join with the subquery to get only the most recent result per stock
-            recent_results = ScreeningResult.query.join(
-                subquery,
-                db.and_(
-                    ScreeningResult.stock_id == subquery.c.stock_id,
-                    ScreeningResult.screening_date == subquery.c.max_date
-                )
-            ).join(Stock).order_by(ScreeningResult.score.desc()).limit(10).all()
+            try:
+                cache_date = datetime.utcnow() - timedelta(hours=cache_hours)
+                
+                # Use a subquery to get the most recent screening result for each stock
+                subquery = db.session.query(
+                    ScreeningResult.stock_id,
+                    db.func.max(ScreeningResult.screening_date).label('max_date')
+                ).filter(
+                    ScreeningResult.passes_all_criteria == True,
+                    ScreeningResult.screening_date >= cache_date
+                ).group_by(ScreeningResult.stock_id).subquery()
+                
+                # Join with the subquery to get only the most recent result per stock
+                recent_results = ScreeningResult.query.join(
+                    subquery,
+                    db.and_(
+                        ScreeningResult.stock_id == subquery.c.stock_id,
+                        ScreeningResult.screening_date == subquery.c.max_date
+                    )
+                ).join(Stock).order_by(ScreeningResult.score.desc()).limit(10).all()
+            except Exception as e:
+                logger.error(f"Error getting cached screening results: {str(e)}")
+                # Fallback to a more basic query if the subquery approach fails
+                recent_results = []
             
             if recent_results:
                 logger.debug(f"Using cached screening results from database ({len(recent_results)} stocks)")
@@ -419,11 +424,23 @@ def screen_stocks():
         # Commit all database changes
         db.session.commit()
         
-        return jsonify({"success": True, "stocks": top_stocks, "cached": False})
+        # Process top_stocks to ensure all boolean values are properly converted
+        for stock in top_stocks:
+            if "technical_data" in stock:
+                for key, value in stock["technical_data"].items():
+                    if isinstance(value, bool):
+                        stock["technical_data"][key] = bool(value)
+            if "fundamental_data" in stock:
+                for key, value in stock["fundamental_data"].items():
+                    if isinstance(value, bool):
+                        stock["fundamental_data"][key] = bool(value)
+        
+        # Use the custom encoder for this response
+        return json.dumps({"success": True, "stocks": top_stocks, "cached": False}, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         logger.error(f"Error in stock screening: {str(e)}")
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
 
 @app.route('/api/stock/<symbol>')
 def get_stock_data(symbol):
@@ -495,7 +512,8 @@ def get_stock_data(symbol):
                             if 'next_5_years_growth' in annual_estimates:
                                 stock_data["fundamental_data"]["next_5_years_growth"] = float(annual_estimates['next_5_years_growth']) if annual_estimates['next_5_years_growth'] is not None else None
                     
-                    return jsonify({"success": True, "data": stock_data, "cached": True})
+                    # Use the custom encoder for this response
+                    return json.dumps({"success": True, "data": stock_data, "cached": True}, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
         
         # If no cache or cache miss, fetch from API
         logger.debug(f"Fetching fresh data for {symbol} from API")
@@ -623,11 +641,12 @@ def get_stock_data(symbol):
                 db.session.rollback()
                 # Continue with returning the data even if database save fails
         
-        return jsonify({"success": True, "data": stock_data, "cached": False})
+        # Use the custom encoder for this response
+        return json.dumps({"success": True, "data": stock_data, "cached": False}, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         logger.error(f"Error fetching stock data for {symbol}: {str(e)}")
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
 
 @app.route('/api/stats')
 def get_database_stats():
@@ -653,7 +672,7 @@ def get_database_stats():
         else:
             passing_stocks = 0
         
-        return jsonify({
+        stats_data = {
             "success": True,
             "stats": {
                 "stock_count": stock_count,
@@ -662,10 +681,11 @@ def get_database_stats():
                 "last_execution_time": last_execution_time,
                 "passing_stocks": passing_stocks
             }
-        })
+        }
+        return json.dumps(stats_data, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         logger.error(f"Error getting database stats: {str(e)}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
 
 @app.route('/api/cache/clear', methods=['POST'])
 def clear_cache():
@@ -676,7 +696,7 @@ def clear_cache():
             ScreeningResult.query.delete()
             db.session.commit()
             logger.debug("Cleared all screening results")
-            return jsonify({"success": True, "message": "Cleared all screening results"})
+            return json.dumps({"success": True, "message": "Cleared all screening results"}, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
         
         # Only delete older than a certain time
         days = int(request.args.get('days', 7))
@@ -686,14 +706,14 @@ def clear_cache():
         db.session.commit()
         
         logger.debug(f"Cleared {count} screening results older than {days} days")
-        return jsonify({
+        return json.dumps({
             "success": True,
             "message": f"Cleared {count} screening results older than {days} days"
-        })
+        }, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
     except Exception as e:
         logger.error(f"Error clearing cache: {str(e)}")
         db.session.rollback()
-        return jsonify({"success": False, "error": str(e)}), 500
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
