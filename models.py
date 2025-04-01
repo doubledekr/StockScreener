@@ -1,8 +1,30 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
+import numpy as np
 
 db = SQLAlchemy()
+
+# Custom JSON encoder for handling non-serializable types
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # Handle numpy types
+        if isinstance(obj, (np.integer, np.int64, np.int32)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, np.float64, np.float32)):
+            return float(obj)
+        elif isinstance(obj, (np.ndarray,)):
+            return obj.tolist()
+        elif isinstance(obj, (np.bool_)):
+            return bool(obj)
+        # Handle datetime objects
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        # Handle native Python bool (for redundancy)
+        elif isinstance(obj, bool):
+            return bool(obj)
+        # Let the base class handle other types or raise TypeError
+        return super(CustomJSONEncoder, self).default(obj)
 
 class Stock(db.Model):
     """Model for storing basic stock information"""
@@ -63,7 +85,7 @@ class StockFundamentals(db.Model):
     def set_raw_data(self, data_dict):
         """Store the raw fundamental data as a JSON string"""
         if data_dict:
-            self.raw_data = json.dumps(data_dict)
+            self.raw_data = json.dumps(data_dict, cls=CustomJSONEncoder)
     
     def __repr__(self):
         return f'<StockFundamentals {self.stock.symbol}>'
@@ -108,7 +130,7 @@ class ScreeningResult(db.Model):
     def set_chart_data(self, data_dict):
         """Store the chart data as a JSON string"""
         if data_dict:
-            self.chart_data = json.dumps(data_dict)
+            self.chart_data = json.dumps(data_dict, cls=CustomJSONEncoder)
     
     def __repr__(self):
         return f'<ScreeningResult {self.stock.symbol} {self.screening_date}>'
