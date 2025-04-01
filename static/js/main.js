@@ -122,6 +122,32 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                     </div>
+                    
+                    ${stock.price_targets && stock.price_targets.upside !== undefined && stock.price_targets.upside !== null ? 
+                    `<div class="row mt-2">
+                        <div class="col-6">
+                            <div class="small text-muted">Price Target</div>
+                            <div>${stock.price_targets.avg ? '$' + formatNumber(stock.price_targets.avg) : 'N/A'}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small text-muted">Upside</div>
+                            <div class="${stock.price_targets.upside > 0 ? 'text-success' : 'text-danger'}">
+                                ${formatPercent(stock.price_targets.upside)}
+                            </div>
+                        </div>
+                    </div>` : ''}
+                    
+                    ${stock.analyst_ratings && stock.analyst_ratings.analyst_count > 0 ? 
+                    `<div class="row mt-2">
+                        <div class="col-12">
+                            <div class="small text-muted">Analyst Ratings (${stock.analyst_ratings.analyst_count})</div>
+                            <div class="d-flex">
+                                <span class="badge bg-success me-1">${stock.analyst_ratings.buy_ratings || 0} Buy</span>
+                                <span class="badge bg-secondary me-1">${stock.analyst_ratings.hold_ratings || 0} Hold</span>
+                                <span class="badge bg-danger">${stock.analyst_ratings.sell_ratings || 0} Sell</span>
+                            </div>
+                        </div>
+                    </div>` : ''}
                 </div>
                 <div class="card-footer">
                     <button class="btn btn-outline-primary btn-sm view-details" data-symbol="${stock.symbol}">
@@ -238,8 +264,56 @@ document.addEventListener('DOMContentLoaded', function() {
                     fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(fund_data.next_5_years_growth));
                 }
                 
+                // Add price targets if available
+                if (data.price_targets) {
+                    fundamentalHTML += `<tr><td colspan="2" class="text-primary fw-bold pt-3">Price Targets</td></tr>`;
+                    
+                    if (data.price_targets.low !== undefined && data.price_targets.low !== null) {
+                        fundamentalHTML += createMetricRow('Target Low', `$${formatNumber(data.price_targets.low)}`);
+                    }
+                    
+                    if (data.price_targets.avg !== undefined && data.price_targets.avg !== null) {
+                        fundamentalHTML += createMetricRow('Target Average', `$${formatNumber(data.price_targets.avg)}`);
+                    }
+                    
+                    if (data.price_targets.high !== undefined && data.price_targets.high !== null) {
+                        fundamentalHTML += createMetricRow('Target High', `$${formatNumber(data.price_targets.high)}`);
+                    }
+                    
+                    if (data.price_targets.upside !== undefined && data.price_targets.upside !== null) {
+                        fundamentalHTML += createMetricRow('Upside Potential', 
+                            formatPercent(data.price_targets.upside), 
+                            data.price_targets.upside > 0);
+                    }
+                }
+                
+                // Add analyst ratings if available
+                if (data.analyst_ratings) {
+                    fundamentalHTML += `<tr><td colspan="2" class="text-primary fw-bold pt-3">Analyst Ratings</td></tr>`;
+                    
+                    if (data.analyst_ratings.analyst_count !== undefined && data.analyst_ratings.analyst_count !== null && data.analyst_ratings.analyst_count > 0) {
+                        fundamentalHTML += createMetricRow('Analysts Covering', data.analyst_ratings.analyst_count);
+                        
+                        if (data.analyst_ratings.buy_ratings !== undefined && data.analyst_ratings.buy_ratings !== null) {
+                            fundamentalHTML += createMetricRow('Buy Ratings', data.analyst_ratings.buy_ratings);
+                        }
+                        
+                        if (data.analyst_ratings.hold_ratings !== undefined && data.analyst_ratings.hold_ratings !== null) {
+                            fundamentalHTML += createMetricRow('Hold Ratings', data.analyst_ratings.hold_ratings);
+                        }
+                        
+                        if (data.analyst_ratings.sell_ratings !== undefined && data.analyst_ratings.sell_ratings !== null) {
+                            fundamentalHTML += createMetricRow('Sell Ratings', data.analyst_ratings.sell_ratings);
+                        }
+                    } else {
+                        fundamentalHTML += `<tr><td colspan="2" class="text-muted small">No analyst coverage available</td></tr>`;
+                    }
+                }
+                
                 // Add a message if no fundamental data is available
-                if (Object.keys(fund_data).filter(key => fund_data[key] !== null && fund_data[key] !== undefined).length === 0) {
+                if (Object.keys(fund_data).filter(key => fund_data[key] !== null && fund_data[key] !== undefined).length === 0 &&
+                    (!data.price_targets || Object.keys(data.price_targets).length === 0) &&
+                    (!data.analyst_ratings || Object.keys(data.analyst_ratings).length === 0)) {
                     fundamentalHTML += `<tr><td colspan="2" class="text-center text-muted">
                         <small>No fundamental data available for this stock.</small>
                     </td></tr>`;
