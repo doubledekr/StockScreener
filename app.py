@@ -230,9 +230,23 @@ def screen_stocks():
         # Check if we have recent cached results
         if use_cache:
             cache_date = datetime.utcnow() - timedelta(hours=cache_hours)
-            recent_results = ScreeningResult.query.filter(
+            
+            # Use a subquery to get the most recent screening result for each stock
+            subquery = db.session.query(
+                ScreeningResult.stock_id,
+                db.func.max(ScreeningResult.screening_date).label('max_date')
+            ).filter(
                 ScreeningResult.passes_all_criteria == True,
                 ScreeningResult.screening_date >= cache_date
+            ).group_by(ScreeningResult.stock_id).subquery()
+            
+            # Join with the subquery to get only the most recent result per stock
+            recent_results = ScreeningResult.query.join(
+                subquery,
+                db.and_(
+                    ScreeningResult.stock_id == subquery.c.stock_id,
+                    ScreeningResult.screening_date == subquery.c.max_date
+                )
             ).join(Stock).order_by(ScreeningResult.score.desc()).limit(10).all()
             
             if recent_results:

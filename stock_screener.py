@@ -800,9 +800,11 @@ class StockScreener:
         
         # STEP 2: Filter symbols that passed technical criteria
         technical_passed_symbols = []
+        seen_symbols = set()  # Track symbols to prevent duplicates
         for symbol, (passed, tech_data) in technical_results.items():
-            if passed:
+            if passed and symbol not in seen_symbols:
                 technical_passed_symbols.append((symbol, tech_data))
+                seen_symbols.add(symbol)
         
         logger.debug(f"{len(technical_passed_symbols)} symbols passed technical criteria")
         
