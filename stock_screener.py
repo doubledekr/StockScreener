@@ -666,19 +666,40 @@ class StockScreener:
                 if 'next_5_years_growth' in annual_data:
                     metrics['next_5_years_growth'] = float(annual_data['next_5_years_growth'] or 0)
             
-            # Make criteria more flexible: 
-            # Accept if at least 3 out of 4 criteria are met OR if growth rate is high in one area
+            # Make criteria even more flexible for screening: 
+            # Accept if at least 2 out of 4 criteria are met OR if growth rate shows promise
             positive_count = sum(1 for value in criteria.values() if value)
+            
+            # Count both exceptional growth and even moderate growth
             exceptional_growth = any([
-                q_revenue_growth > 20,  # Exceptional revenue growth
-                q_eps_growth > 20,      # Exceptional EPS growth
-                sales_growth_est > 15,  # Strong estimated sales growth
-                eps_growth_est > 15     # Strong estimated EPS growth
+                q_revenue_growth > 20,       # Exceptional revenue growth
+                q_eps_growth > 20,           # Exceptional EPS growth
+                sales_growth_est > 15,       # Strong estimated sales growth
+                eps_growth_est > 15          # Strong estimated EPS growth
             ])
             
-            # Check if criteria are met - needs either 3/4 positive metrics or 1 exceptional metric
-            meets_criteria = positive_count >= 3 or exceptional_growth
-            logger.debug(f"{symbol} fundamental metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}")
+            moderate_growth = any([
+                q_revenue_growth > 10,       # Good revenue growth
+                q_eps_growth > 10,           # Good EPS growth
+                sales_growth_est > 5,        # Decent estimated sales growth
+                eps_growth_est > 5           # Decent estimated EPS growth
+            ])
+            
+            # Accept stocks with either:
+            # 1. At least 2/4 positive metrics (was 3/4 before)
+            # 2. Exceptional growth in any category
+            # 3. Moderate growth in ANY category + at least 1 positive metric
+            meets_criteria = (positive_count >= 2 or 
+                             exceptional_growth or 
+                             (moderate_growth and positive_count >= 1))
+            
+            # Detailed logging to understand which criteria are being met/missed
+            logger.debug(
+                f"{symbol} metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}, "
+                f"moderate: {moderate_growth}, CRITERIA MET: {meets_criteria}, "
+                f"q_rev_growth: {q_revenue_growth:.1f}%, q_eps_growth: {q_eps_growth:.1f}%, "
+                f"est_sales_growth: {sales_growth_est:.1f}%, est_eps_growth: {eps_growth_est:.1f}%"
+            )
             
             return meets_criteria, {**criteria, **metrics}
         except Exception as e:
