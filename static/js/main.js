@@ -193,8 +193,61 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // Database stats functions
+    function loadDatabaseStats() {
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.stats) {
+                    // Update cache info in UI if we have a stats section
+                    const statsElement = document.getElementById('database-stats');
+                    if (statsElement) {
+                        const stats = data.stats;
+                        let statsHtml = '';
+                        
+                        if (stats.last_screening_time) {
+                            const lastScreeningDate = new Date(stats.last_screening_time);
+                            const formattedDate = lastScreeningDate.toLocaleString();
+                            statsHtml += `<div>Last updated: ${formattedDate}</div>`;
+                        }
+                        
+                        if (stats.screening_result_count > 0) {
+                            statsHtml += `<div>Saved stocks: ${stats.stock_count}</div>`;
+                            statsHtml += `<div>Saved screenings: ${stats.screening_result_count}</div>`;
+                        }
+                        
+                        if (stats.last_execution_time) {
+                            statsHtml += `<div>Last scan duration: ${stats.last_execution_time.toFixed(1)}s</div>`;
+                        }
+                        
+                        statsElement.innerHTML = statsHtml;
+                        statsElement.classList.remove('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading database stats:', error);
+            });
+    }
+    
+    // Clear database cache
+    function clearDatabaseCache(days = 7) {
+        fetch(`/api/cache/clear?days=${days}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(data.message);
+                    // Refresh stats after clearing cache
+                    loadDatabaseStats();
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing cache:', error);
+            });
+    }
+    
     // Load stock data from the API
-    function loadStockData() {
+    function loadStockData(useCache = true) {
         // Show loading state
         loadingContainer.classList.remove('d-none');
         stocksContainer.innerHTML = '';
@@ -202,8 +255,9 @@ document.addEventListener('DOMContentLoaded', function() {
         noResults.classList.add('d-none');
         refreshBtn.disabled = true;
         
-        // Fetch the data
-        fetch('/api/screen')
+        // Fetch the data (with cache control)
+        const cacheParam = useCache ? 'true' : 'false';
+        fetch(`/api/screen?use_cache=${cacheParam}`)
             .then(response => response.json())
             .then(data => {
                 // Hide loading state
@@ -252,9 +306,38 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Add event listener to refresh button
-    refreshBtn.addEventListener('click', loadStockData);
+    // Add event listeners
+    refreshBtn.addEventListener('click', function() {
+        // Force refresh from API (no cache)
+        loadStockData(false);
+    });
     
-    // Initial load
-    loadStockData();
+    // Add event listener to cache control if it exists
+    const cacheToggle = document.getElementById('use-cache');
+    if (cacheToggle) {
+        cacheToggle.addEventListener('change', function() {
+            // Reset the toggle after using it once for a single request
+            const useCache = this.checked;
+            loadStockData(useCache);
+            
+            // Reset to default after using
+            setTimeout(() => {
+                this.checked = true;
+            }, 1000);
+        });
+    }
+    
+    // Add event listener to clear cache button if it exists
+    const clearCacheBtn = document.getElementById('clear-cache');
+    if (clearCacheBtn) {
+        clearCacheBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear cached screening results?')) {
+                clearDatabaseCache();
+            }
+        });
+    }
+    
+    // Initial loads
+    loadStockData(true);
+    loadDatabaseStats();
 });
