@@ -89,6 +89,56 @@
                             </div>
                         </div>
 
+                        <div class="mt-4 mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users me-2">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                        Top Analyst Picks
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="analyst-picks-loading" class="text-center my-3">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <span class="ms-2">Loading analyst picks...</span>
+                                    </div>
+                                    <div id="analyst-picks-error" class="alert alert-warning d-none" role="alert">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle me-2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                        </svg>
+                                        Could not load analyst picks.
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="analyst-picks-table" class="table table-sm table-hover d-none">
+                                            <thead>
+                                                <tr>
+                                                    <th>Symbol</th>
+                                                    <th>Company</th>
+                                                    <th>Analyst Ratings</th>
+                                                    <th>Price Target</th>
+                                                    <th>Current Price</th>
+                                                    <th>Upside</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="analyst-picks-body">
+                                                <!-- Analyst picks will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="mt-4">
                             <h3>Top 10 Qualified Stocks</h3>
                         </div>
@@ -98,9 +148,17 @@
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">Database Info</h5>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="use-cache" checked>
-                                        <label class="form-check-label" for="use-cache">Use Cache</label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="form-check form-switch me-2">
+                                            <input class="form-check-input" type="checkbox" id="use-cache" checked>
+                                            <label class="form-check-label" for="use-cache">Use Cache</label>
+                                        </div>
+                                        <button id="refresh-premium-data" class="btn btn-sm btn-outline-info" title="Refresh analyst ratings and price targets">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign">
+                                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

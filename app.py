@@ -732,6 +732,199 @@ def get_stock_data(symbol):
         db.session.rollback()
         return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
 
+@app.route('/api/analyst_picks')
+def get_analyst_picks():
+    """Get top stocks based on analyst ratings"""
+    try:
+        # Try to get top 10 stocks with the best analyst ratings
+        stocks_with_ratings = []
+        
+        # First search stocks that have analyst data
+        stocks = db.session.query(Stock).join(StockFundamentals).filter(
+            StockFundamentals.analyst_count.isnot(None),
+            StockFundamentals.analyst_count > 0
+        ).all()
+        
+        # For each stock, calculate a rating score based on buy/hold/sell ratio
+        for stock in stocks:
+            fundamental = StockFundamentals.query.filter_by(stock_id=stock.id).first()
+            if not fundamental:
+                continue
+                
+            # Skip if missing any ratings data
+            if (fundamental.buy_ratings is None or 
+                fundamental.hold_ratings is None or 
+                fundamental.sell_ratings is None):
+                continue
+                
+            # Calculate a score: (buy * 1 + hold * 0 + sell * -1) / total
+            total_ratings = fundamental.buy_ratings + fundamental.hold_ratings + fundamental.sell_ratings
+            if total_ratings == 0:
+                continue
+                
+            score = (fundamental.buy_ratings - fundamental.sell_ratings) / total_ratings
+            
+            # Add upside potential to the score if available
+            upside_factor = 0
+            if fundamental.price_target_upside is not None and fundamental.price_target_upside > 0:
+                # Normalize upside: 20% upside = 0.2 score boost
+                upside_factor = min(fundamental.price_target_upside / 100, 0.5)  # Cap at 0.5
+            
+            # Combined score: analyst sentiment (range -1 to 1) + upside factor (up to 0.5)
+            combined_score = score + upside_factor
+            
+            # Get the latest screening result for technical data
+            result = ScreeningResult.query.filter_by(stock_id=stock.id).order_by(
+                ScreeningResult.screening_date.desc()
+            ).first()
+            
+            if not result:
+                continue
+            
+            # Create a stock data object for the response
+            stock_data = {
+                "symbol": stock.symbol,
+                "company_name": stock.company_name,
+                "score": combined_score,
+                "technical_data": {
+                    "current_price": result.current_price,
+                    "sma50": result.sma50,
+                    "sma100": result.sma100,
+                    "sma200": result.sma200,
+                    "sma200_slope": result.sma200_slope,
+                    "price_above_sma200": result.price_above_sma200,
+                    "sma200_slope_positive": result.sma200_slope_positive,
+                    "sma50_above_sma200": result.sma50_above_sma200,
+                    "sma100_above_sma200": result.sma100_above_sma200
+                },
+                "fundamental_data": {
+                    "quarterly_sales_growth": float(fundamental.quarterly_revenue_growth) if fundamental.quarterly_revenue_growth is not None else None,
+                    "quarterly_eps_growth": float(fundamental.quarterly_eps_growth) if fundamental.quarterly_eps_growth is not None else None,
+                    "estimated_sales_growth": float(fundamental.estimated_sales_growth) if fundamental.estimated_sales_growth is not None else None,
+                    "estimated_eps_growth": float(fundamental.estimated_eps_growth) if fundamental.estimated_eps_growth is not None else None,
+                },
+                "price_targets": {
+                    "low": float(fundamental.price_target_low) if fundamental.price_target_low is not None else None,
+                    "avg": float(fundamental.price_target_avg) if fundamental.price_target_avg is not None else None,
+                    "high": float(fundamental.price_target_high) if fundamental.price_target_high is not None else None,
+                    "upside": float(fundamental.price_target_upside) if fundamental.price_target_upside is not None else None
+                },
+                "analyst_ratings": {
+                    "analyst_count": fundamental.analyst_count,
+                    "buy_ratings": fundamental.buy_ratings,
+                    "hold_ratings": fundamental.hold_ratings,
+                    "sell_ratings": fundamental.sell_ratings
+                },
+                "chart_data": result.get_chart_data()
+            }
+            
+            stocks_with_ratings.append(stock_data)
+        
+        # Sort by score in descending order and take top 10
+        stocks_with_ratings.sort(key=lambda x: x['score'], reverse=True)
+        top_picks = stocks_with_ratings[:10]
+        
+        # If we have no results, fetch fresh data from the API
+        if not top_picks:
+            logger.debug("No stocks with analyst ratings found in the database, fetching fresh data")
+            # Try to get analyst data for some popular stocks
+            popular_stocks = ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "NVDA", "TSLA", "JPM", "V", "BAC", 
+                              "JNJ", "PG", "XOM", "CVX", "UNH", "HD", "MRK", "DIS", "NFLX", "INTC"]
+            
+            top_picks = []
+            for symbol in popular_stocks[:10]:  # Start with top 10
+                try:
+                    # Fetch fresh data from the API
+                    stock_data = screener.get_stock_details(symbol)
+                    if stock_data and stock_data.get("analyst_ratings"):
+                        # Add this stock to our list
+                        top_picks.append(stock_data)
+                except Exception as e:
+                    logger.error(f"Error fetching analyst data for {symbol}: {str(e)}")
+                    continue
+        
+        return json.dumps({"success": True, "stocks": top_picks}, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
+    except Exception as e:
+        logger.error(f"Error getting top analyst picks: {str(e)}")
+        db.session.rollback()
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/refresh/premium_data', methods=['POST'])
+def refresh_premium_data():
+    """Force refresh premium data (price targets and analyst ratings) for popular stocks"""
+    try:
+        # List of popular stocks to refresh data for
+        popular_stocks = ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "NVDA", "TSLA", "JPM", "V", "BAC", 
+                           "JNJ", "PG", "XOM", "CVX", "UNH", "HD", "MRK", "DIS", "NFLX", "INTC"]
+        
+        # Get a subset of stocks to refresh
+        max_stocks = min(int(request.args.get('max', 10)), len(popular_stocks))
+        stocks_to_refresh = popular_stocks[:max_stocks]
+        
+        # Refresh data for each stock
+        refreshed = []
+        for symbol in stocks_to_refresh:
+            try:
+                # Force refresh from API
+                stock_data = screener.get_stock_details(symbol)
+                
+                # Store the data in the database
+                db_stock = Stock.query.filter_by(symbol=symbol).first()
+                if not db_stock:
+                    db_stock = Stock(symbol=symbol, company_name=stock_data.get('company_name', symbol))
+                    db.session.add(db_stock)
+                    db.session.flush()  # Get the ID without committing
+                
+                # Update fundamentals to store price targets and analyst ratings
+                fundamental = StockFundamentals.query.filter_by(stock_id=db_stock.id).first()
+                if not fundamental:
+                    fundamental = StockFundamentals(stock_id=db_stock.id)
+                    db.session.add(fundamental)
+                
+                # Update price targets if available
+                if "price_targets" in stock_data and stock_data["price_targets"]:
+                    pt = stock_data["price_targets"]
+                    fundamental.price_target_low = pt.get('low')
+                    fundamental.price_target_avg = pt.get('avg')
+                    fundamental.price_target_high = pt.get('high')
+                    fundamental.price_target_upside = pt.get('upside')
+                
+                # Update analyst ratings if available
+                if "analyst_ratings" in stock_data and stock_data["analyst_ratings"]:
+                    r = stock_data["analyst_ratings"]
+                    fundamental.analyst_count = r.get('analyst_count')
+                    fundamental.buy_ratings = r.get('buy_ratings')
+                    fundamental.hold_ratings = r.get('hold_ratings') 
+                    fundamental.sell_ratings = r.get('sell_ratings')
+                
+                # Update last updated timestamp
+                fundamental.last_updated = datetime.utcnow()
+                
+                # Add to the list of refreshed symbols
+                refreshed.append({
+                    "symbol": symbol,
+                    "price_targets": True if "price_targets" in stock_data else False,
+                    "analyst_ratings": True if "analyst_ratings" in stock_data else False
+                })
+                
+            except Exception as e:
+                logger.error(f"Error refreshing premium data for {symbol}: {str(e)}")
+                continue
+        
+        # Commit all changes to the database
+        db.session.commit()
+        
+        return json.dumps({
+            "success": True,
+            "message": f"Refreshed premium data for {len(refreshed)} stocks",
+            "refreshed": refreshed
+        }, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}
+        
+    except Exception as e:
+        logger.error(f"Error refreshing premium data: {str(e)}")
+        db.session.rollback()
+        return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
+
 @app.route('/api/stats')
 def get_database_stats():
     """Get statistics about the database"""

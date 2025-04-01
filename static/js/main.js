@@ -365,6 +365,52 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // Refresh premium data (price targets and analyst ratings)
+    document.getElementById('refresh-premium-data')?.addEventListener('click', function() {
+        // Show confirmation dialog
+        if (!confirm('This will refresh price targets and analyst ratings for 10 popular stocks. Continue?')) {
+            return;
+        }
+        
+        // Disable the button and show loading state
+        this.disabled = true;
+        const originalHtml = this.innerHTML;
+        this.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span class="visually-hidden">Loading...</span>
+        `;
+        
+        // Call the API to refresh premium data
+        fetch('/api/refresh/premium_data', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Re-enable the button
+            this.disabled = false;
+            this.innerHTML = originalHtml;
+            
+            if (data.success) {
+                // Show success toast
+                alert(`Successfully refreshed premium data for ${data.refreshed.length} stocks. Reload the page to see the updated data.`);
+                
+                // Reload analyst picks
+                loadAnalystPicks();
+            } else {
+                // Show error message
+                alert(`Error refreshing premium data: ${data.error}`);
+            }
+        })
+        .catch(error => {
+            // Re-enable the button
+            this.disabled = false;
+            this.innerHTML = originalHtml;
+            
+            // Show error message
+            alert(`Error refreshing premium data: ${error.message}`);
+        });
+    });
+    
     // Database stats functions
     function loadDatabaseStats() {
         fetch('/api/stats')
@@ -516,6 +562,88 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Load market movers data
+    // Load analyst picks data
+    function loadAnalystPicks() {
+        const picksLoading = document.getElementById('analyst-picks-loading');
+        const picksError = document.getElementById('analyst-picks-error');
+        const picksTable = document.getElementById('analyst-picks-table');
+        const picksBody = document.getElementById('analyst-picks-body');
+        
+        if (!picksLoading || !picksError || !picksTable || !picksBody) {
+            return;
+        }
+        
+        // Show loading, hide table and error
+        picksLoading.classList.remove('d-none');
+        picksTable.classList.add('d-none');
+        picksError.classList.add('d-none');
+        
+        // Fetch analyst picks
+        fetch('/api/analyst_picks')
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading, show table
+                picksLoading.classList.add('d-none');
+                picksTable.classList.remove('d-none');
+                
+                if (!data.success || !data.stocks || data.stocks.length === 0) {
+                    throw new Error('No analyst picks data available');
+                }
+                
+                // Clear the table
+                picksBody.innerHTML = '';
+                
+                // Add rows for each analyst pick
+                data.stocks.forEach(stock => {
+                    const row = document.createElement('tr');
+                    
+                    // Get price target and upside data
+                    const priceTarget = stock.price_targets && stock.price_targets.avg ? `$${formatNumber(stock.price_targets.avg)}` : 'N/A';
+                    let upside = 'N/A';
+                    let upsideClass = '';
+                    
+                    if (stock.price_targets && stock.price_targets.upside !== null && stock.price_targets.upside !== undefined) {
+                        upside = formatPercent(stock.price_targets.upside);
+                        upsideClass = stock.price_targets.upside > 0 ? 'text-success' : 'text-danger';
+                    }
+                    
+                    // Create analyst ratings display
+                    let analystRatings = 'N/A';
+                    if (stock.analyst_ratings && stock.analyst_ratings.analyst_count > 0) {
+                        analystRatings = `
+                            <div class="d-flex">
+                                <span class="badge bg-success me-1">${stock.analyst_ratings.buy_ratings || 0} Buy</span>
+                                <span class="badge bg-secondary me-1">${stock.analyst_ratings.hold_ratings || 0} Hold</span>
+                                <span class="badge bg-danger">${stock.analyst_ratings.sell_ratings || 0} Sell</span>
+                            </div>
+                        `;
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${stock.symbol}</td>
+                        <td class="text-truncate" style="max-width: 150px;">${stock.company_name || 'Unknown'}</td>
+                        <td>${analystRatings}</td>
+                        <td>${priceTarget}</td>
+                        <td>$${formatNumber(stock.technical_data.current_price)}</td>
+                        <td class="${upsideClass}">${upside}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-details" data-symbol="${stock.symbol}">
+                                Details
+                            </button>
+                        </td>
+                    `;
+                    
+                    picksBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading analyst picks:', error);
+                picksLoading.classList.add('d-none');
+                picksError.classList.remove('d-none');
+                picksError.textContent = `Could not load analyst picks. ${error.message}`;
+            });
+    }
+    
     function loadMarketMovers() {
         // Show loading state
         if (marketMoversLoading) marketMoversLoading.classList.remove('d-none');
@@ -597,4 +725,5 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStockData(true);
     loadDatabaseStats();
     loadMarketMovers();
+    loadAnalystPicks();
 });
