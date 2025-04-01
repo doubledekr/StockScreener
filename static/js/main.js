@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('error-message');
     const stocksContainer = document.getElementById('stocks-container');
     const noResults = document.getElementById('no-results');
+    const exportBtn = document.getElementById('export-stocks-btn');
     
     // Market movers elements
     const marketMoversLoading = document.getElementById('market-movers-loading');
@@ -591,6 +592,37 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm('Are you sure you want to clear cached screening results?')) {
                 clearDatabaseCache();
             }
+        });
+    }
+    
+    // Add event listener to the export button if it exists
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // Show a loading spinner in the button
+            const originalContent = exportBtn.innerHTML;
+            exportBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Exporting...
+            `;
+            exportBtn.disabled = true;
+            
+            // Build the URL with the current cache settings
+            const useCache = document.getElementById('use-cache')?.checked ?? true;
+            const downloadUrl = `/api/export/screened_stocks?use_cache=${useCache}&format=csv`;
+            
+            // Create a temporary link and trigger the download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', 'stock_screening_results.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Restore the button after a delay
+            setTimeout(() => {
+                exportBtn.innerHTML = originalContent;
+                exportBtn.disabled = false;
+            }, 1500);
         });
     }
     

@@ -2,12 +2,15 @@ import os
 import logging
 import requests
 import json
+import csv
+import io
 from datetime import datetime, timedelta
+from flask import Response
 
 # Import dependencies with error handling
 try:
     import numpy as np
-    from flask import Flask, render_template, jsonify, request
+    from flask import Flask, render_template, jsonify, request, make_response, send_file
 except ImportError:
     # Create dummy numpy module if imports fail
     class NumpyDummy:
@@ -1049,6 +1052,145 @@ def clear_cache():
         logger.error(f"Error clearing cache: {str(e)}")
         db.session.rollback()
         return json.dumps({"success": False, "error": str(e)}, cls=CustomJSONEncoder), 500, {'Content-Type': 'application/json'}
+
+@app.route('/api/export/screened_stocks', methods=['GET'])
+def export_screened_stocks():
+    """Generate CSV export of screened stocks data"""
+    try:
+        # Get query parameters
+        use_cache = request.args.get('use_cache', 'true').lower() == 'true'
+        cache_hours = int(request.args.get('cache_hours', 24))
+        format_type = request.args.get('format', 'csv').lower()
+        
+        logger.debug(f"Exporting screened stocks data in {format_type} format")
+        
+        # Get most recent screening results using similar logic to the screen endpoint
+        cache_date = datetime.utcnow() - timedelta(hours=cache_hours)
+        
+        # Use a subquery to get the most recent screening result for each stock
+        subquery = db.session.query(
+            ScreeningResult.stock_id,
+            db.func.max(ScreeningResult.screening_date).label('max_date')
+        ).filter(
+            ScreeningResult.screening_date >= cache_date
+        ).group_by(ScreeningResult.stock_id).subquery()
+        
+        # Join with the subquery to get only the most recent result per stock
+        recent_results = ScreeningResult.query.join(
+            subquery,
+            db.and_(
+                ScreeningResult.stock_id == subquery.c.stock_id,
+                ScreeningResult.screening_date == subquery.c.max_date
+            )
+        ).join(Stock).order_by(ScreeningResult.score.desc()).all()
+        
+        if not recent_results:
+            logger.debug("No screening results found for export")
+            return jsonify({"success": False, "error": "No screening results found"}), 404
+            
+        logger.debug(f"Found {len(recent_results)} stocks for export")
+        
+        # Create a CSV output
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write the header row
+        headers = [
+            'Symbol', 'Company Name', 'Current Price', 
+            'SMA50', 'SMA100', 'SMA200', 'SMA200 Slope',
+            'Price > SMA200', 'SMA200 Slope Positive', 'SMA50 > SMA200', 'SMA100 > SMA200',
+            'Quarterly Revenue Growth', 'Quarterly EPS Growth',
+            'Estimated Sales Growth', 'Estimated EPS Growth',
+            'Fundamental Growth Score', 'Technical Score', 'Total Score',
+            'Meets All Criteria', 'Screened Date'
+        ]
+        writer.writerow(headers)
+        
+        # Write each stock's data
+        for result in recent_results:
+            stock = result.stock
+            fundamentals = StockFundamentals.query.filter_by(stock_id=stock.id).first()
+            
+            # Prepare technical metrics with proper formatting
+            price_above_sma200 = "Yes" if result.price_above_sma200 else "No"
+            sma200_slope_positive = "Yes" if result.sma200_slope_positive else "No"
+            sma50_above_sma200 = "Yes" if result.sma50_above_sma200 else "No"
+            sma100_above_sma200 = "Yes" if result.sma100_above_sma200 else "No"
+            
+            # For numerical values, use "N/A" for None values
+            quarterly_rev_growth = f"{fundamentals.quarterly_revenue_growth:.2f}%" if fundamentals and fundamentals.quarterly_revenue_growth is not None else "N/A"
+            quarterly_eps_growth = f"{fundamentals.quarterly_eps_growth:.2f}%" if fundamentals and fundamentals.quarterly_eps_growth is not None else "N/A"
+            est_sales_growth = f"{fundamentals.estimated_sales_growth:.2f}%" if fundamentals and fundamentals.estimated_sales_growth is not None else "N/A"
+            est_eps_growth = f"{fundamentals.estimated_eps_growth:.2f}%" if fundamentals and fundamentals.estimated_eps_growth is not None else "N/A"
+            
+            # Format the date
+            screened_date = result.screening_date.strftime('%Y-%m-%d %H:%M:%S') if result.screening_date else "N/A"
+            
+            # Calculate fundamental score - count of positive growth metrics
+            fundamental_score = 0
+            if result.quarterly_sales_growth_positive:
+                fundamental_score += 1
+            if result.quarterly_eps_growth_positive:
+                fundamental_score += 1
+            if result.estimated_sales_growth_positive:
+                fundamental_score += 1
+            if result.estimated_eps_growth_positive:
+                fundamental_score += 1
+                
+            # Calculate technical score - count of positive technical metrics
+            technical_score = 0
+            if result.price_above_sma200:
+                technical_score += 1
+            if result.sma200_slope_positive:
+                technical_score += 1
+            if result.sma50_above_sma200:
+                technical_score += 1
+            if result.sma100_above_sma200:
+                technical_score += 1
+                
+            # Determine if the stock meets all criteria
+            meets_all_criteria = "Yes" if result.meets_all_criteria else "No"
+            
+            # Create the data row
+            row = [
+                stock.symbol,
+                stock.company_name,
+                f"${result.current_price:.2f}" if result.current_price else "N/A",
+                f"${result.sma50:.2f}" if result.sma50 else "N/A",
+                f"${result.sma100:.2f}" if result.sma100 else "N/A",
+                f"${result.sma200:.2f}" if result.sma200 else "N/A",
+                f"{result.sma200_slope:.4f}" if result.sma200_slope else "N/A",
+                price_above_sma200,
+                sma200_slope_positive,
+                sma50_above_sma200,
+                sma100_above_sma200,
+                quarterly_rev_growth,
+                quarterly_eps_growth,
+                est_sales_growth,
+                est_eps_growth,
+                fundamental_score,
+                technical_score,
+                f"{result.score:.2f}" if result.score else "N/A",
+                meets_all_criteria,
+                screened_date
+            ]
+            writer.writerow(row)
+        
+        # Move the cursor to the beginning of the StringIO object
+        output.seek(0)
+        
+        # Create the response
+        filename = f"stock_screening_results_{datetime.now().strftime('%Y-%m-%d')}.csv"
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment;filename={filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting stock data: {str(e)}")
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
