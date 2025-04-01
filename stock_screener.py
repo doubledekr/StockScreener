@@ -222,6 +222,55 @@ class StockScreener:
         ]
         return small_caps
             
+    def _get_all_us_stocks(self):
+        """Get all US stocks from TwelveData API"""
+        try:
+            # Check cache first
+            cache_key = "all_us_stocks"
+            if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
+                logger.debug("Using cached US stocks list")
+                return self.cache[cache_key]['data']
+                
+            # Build URL to get all US stocks
+            params = {
+                "country": "US",
+                "apikey": self.api_key,
+                "type": "Common Stock"  # Filter to only include common stocks
+            }
+            
+            logger.debug("Fetching all US stocks from TwelveData API")
+            response = requests.get(f"{self.base_url}/stocks", params=params, timeout=15)  # Allow longer timeout for this big request
+            
+            # Check if the request was successful
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract symbols from the response
+                if 'data' in data:
+                    symbols = [item['symbol'] for item in data['data']]
+                    
+                    # Cache the result
+                    self.cache[cache_key] = {
+                        'data': symbols,
+                        'timestamp': time.time()
+                    }
+                    
+                    logger.debug(f"Got {len(symbols)} US stocks from TwelveData API")
+                    return symbols
+            
+            # If we get here, the stocks endpoint failed or returned no data
+            logger.warning("US stocks API failed, falling back to index stocks")
+            # Fall back to S&P 500, NASDAQ 100 and Russell 2000
+            combined_symbols = self._get_sp500_symbols() + self._get_nasdaq100_symbols() + self._get_russell2000_symbols()
+            # Remove duplicates
+            return list(dict.fromkeys(combined_symbols))
+            
+        except Exception as e:
+            logger.error(f"Error fetching US stocks: {str(e)}")
+            combined_symbols = self._get_sp500_symbols() + self._get_nasdaq100_symbols() + self._get_russell2000_symbols()
+            # Remove duplicates
+            return list(dict.fromkeys(combined_symbols))
+            
     def _get_fallback_symbols(self):
         """Return a fallback list of popular stocks"""
         return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "AMD", "INTC", 
@@ -1295,12 +1344,15 @@ class StockScreener:
         # First, try to get market movers which are likely to be trending stocks
         market_movers = self._get_market_movers()
         
-        # Then get S&P 500, Nasdaq 100, and Russell 2000 stocks for a comprehensive coverage
+        # Get all US stocks for a comprehensive screening
+        # This will provide a much broader universe of stocks to screen
+        all_us_stocks = self._get_all_us_stocks()
+        
+        # As a fallback, also get stocks from major indices
         sp500_symbols = self._get_sp500_symbols()
         nasdaq100_symbols = self._get_nasdaq100_symbols()
-        russell2000_symbols = self._get_russell2000_symbols()
         
-        # Combine symbols with priority: market movers, then S&P 500, then Nasdaq 100, then Russell 2000
+        # Combine symbols with priority: market movers first, then all US stocks
         combined_symbols = []
         
         # Helper to filter out warrant symbols (typically end with W)
@@ -1313,29 +1365,31 @@ class StockScreener:
                 return False
             return True
         
-        # Add market movers first (filtered)
+        # Add market movers first (filtered) - these are hot stocks we want to prioritize
         for symbol in market_movers:
             if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
                 
-        # Then add S&P 500 stocks 
-        for symbol in sp500_symbols:
+        # Then add all US stocks (filtered)
+        for symbol in all_us_stocks:
             if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
                 
-        # Then add Nasdaq 100 stocks
-        for symbol in nasdaq100_symbols:
-            if symbol not in combined_symbols and is_regular_stock(symbol):
-                combined_symbols.append(symbol)
-                
-        # Then add Russell 2000 stocks (small caps)
-        for symbol in russell2000_symbols:
-            if symbol not in combined_symbols and is_regular_stock(symbol):
-                combined_symbols.append(symbol)
+        # If we don't have many symbols yet, add from major indices
+        if len(combined_symbols) < 100:
+            # Add S&P 500 stocks
+            for symbol in sp500_symbols:
+                if symbol not in combined_symbols and is_regular_stock(symbol):
+                    combined_symbols.append(symbol)
+                    
+            # Add Nasdaq 100 stocks
+            for symbol in nasdaq100_symbols:
+                if symbol not in combined_symbols and is_regular_stock(symbol):
+                    combined_symbols.append(symbol)
                 
         # With batching we can process more symbols efficiently
-        # Increased from 100 to 200 for broader market coverage including small caps
-        max_symbols = min(200, len(combined_symbols))
+        # Increased from 200 to 500 for broader market coverage from all US stocks
+        max_symbols = min(500, len(combined_symbols))
         symbols = combined_symbols[:max_symbols]
         logger.debug(f"Got {len(symbols)} symbols for batch screening [{', '.join(symbols[:5])}...]")
         
