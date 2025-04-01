@@ -228,7 +228,8 @@ class StockScreener:
             # Check cache first
             cache_key = "all_us_stocks"
             if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
-                logger.debug("Using cached US stocks list")
+                stock_count = len(self.cache[cache_key]['data'])
+                logger.info(f"Using cached US stocks list with {stock_count} symbols")
                 return self.cache[cache_key]['data']
                 
             # Build URL to get all US stocks
@@ -238,7 +239,7 @@ class StockScreener:
                 "type": "Common Stock"  # Filter to only include common stocks
             }
             
-            logger.debug("Fetching all US stocks from TwelveData API")
+            logger.info("🔍 Fetching ALL US stocks from TwelveData API endpoint /stocks")
             response = requests.get(f"{self.base_url}/stocks", params=params, timeout=15)  # Allow longer timeout for this big request
             
             # Check if the request was successful
@@ -255,21 +256,28 @@ class StockScreener:
                         'timestamp': time.time()
                     }
                     
-                    logger.debug(f"Got {len(symbols)} US stocks from TwelveData API")
+                    logger.info(f"✅ Successfully retrieved {len(symbols)} US stocks from TwelveData API")
+                    # Log a sample of stocks for verification
+                    sample = symbols[:10] if len(symbols) >= 10 else symbols
+                    logger.info(f"Sample symbols: {', '.join(sample)}...")
                     return symbols
             
             # If we get here, the stocks endpoint failed or returned no data
-            logger.warning("US stocks API failed, falling back to index stocks")
+            logger.warning("❌ US stocks API failed (status code: {response.status_code}), falling back to index stocks")
             # Fall back to S&P 500, NASDAQ 100 and Russell 2000
             combined_symbols = self._get_sp500_symbols() + self._get_nasdaq100_symbols() + self._get_russell2000_symbols()
             # Remove duplicates
-            return list(dict.fromkeys(combined_symbols))
+            unique_symbols = list(dict.fromkeys(combined_symbols))
+            logger.warning(f"Using {len(unique_symbols)} index stocks as fallback")
+            return unique_symbols
             
         except Exception as e:
             logger.error(f"Error fetching US stocks: {str(e)}")
             combined_symbols = self._get_sp500_symbols() + self._get_nasdaq100_symbols() + self._get_russell2000_symbols()
             # Remove duplicates
-            return list(dict.fromkeys(combined_symbols))
+            unique_symbols = list(dict.fromkeys(combined_symbols))
+            logger.warning(f"Using {len(unique_symbols)} index stocks as fallback due to error")
+            return unique_symbols
             
     def _get_fallback_symbols(self):
         """Return a fallback list of popular stocks"""
@@ -1366,26 +1374,46 @@ class StockScreener:
             return True
         
         # Add market movers first (filtered) - these are hot stocks we want to prioritize
+        market_mover_count = 0
         for symbol in market_movers:
             if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
+                market_mover_count += 1
+        
+        logger.info(f"📊 Added {market_mover_count} market movers to screening list")
                 
         # Then add all US stocks (filtered)
+        all_stocks_count_before = len(combined_symbols)
         for symbol in all_us_stocks:
             if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
+        
+        all_stocks_count_added = len(combined_symbols) - all_stocks_count_before
+        logger.info(f"🌎 Added {all_stocks_count_added} additional stocks from the All US Stocks list")
                 
-        # If we don't have many symbols yet, add from major indices
+        # If we don't have many symbols yet, add from major indices as fallback
         if len(combined_symbols) < 100:
+            logger.info("Adding stocks from major indices as fallback due to limited stocks")
+            
             # Add S&P 500 stocks
+            sp500_count_before = len(combined_symbols)
             for symbol in sp500_symbols:
                 if symbol not in combined_symbols and is_regular_stock(symbol):
                     combined_symbols.append(symbol)
+            
+            sp500_count_added = len(combined_symbols) - sp500_count_before
+            logger.info(f"Added {sp500_count_added} S&P 500 stocks")
                     
             # Add Nasdaq 100 stocks
+            nasdaq_count_before = len(combined_symbols)
             for symbol in nasdaq100_symbols:
                 if symbol not in combined_symbols and is_regular_stock(symbol):
                     combined_symbols.append(symbol)
+            
+            nasdaq_count_added = len(combined_symbols) - nasdaq_count_before
+            logger.info(f"Added {nasdaq_count_added} Nasdaq 100 stocks")
+        
+        logger.info(f"📈 Total universe for screening: {len(combined_symbols)} stocks")
                 
         # With batching we can process more symbols efficiently
         # Increased from 200 to 500 for broader market coverage from all US stocks
@@ -1468,6 +1496,22 @@ class StockScreener:
         # Sort and limit to top stocks
         if qualified_stocks:
             qualified_stocks = sorted(qualified_stocks, key=lambda x: x.get("score", 0), reverse=True)[:limit]
+            
+            # Extract unique symbols for final results
+            final_symbols = [stock['symbol'] for stock in qualified_stocks]
+            
+            # Log the final screening results with source information
+            logger.info(f"🏆 Final screening results: {len(qualified_stocks)} qualified stocks out of {len(combined_symbols)} in universe")
+            logger.info(f"Top qualified stocks: {', '.join(final_symbols)}")
+            
+            # Count how many stocks came from the all_us_stocks list that weren't in the usual indices
+            standard_indices = set(market_movers + sp500_symbols + nasdaq100_symbols)
+            unique_discoveries = [s for s in final_symbols if s not in standard_indices]
+            
+            if unique_discoveries:
+                logger.info(f"⭐ Found {len(unique_discoveries)} stocks from the broader US stock universe: {', '.join(unique_discoveries)}")
+            else:
+                logger.info("All qualified stocks came from standard indices or market movers")
         
         # If we don't have enough qualified stocks, return what we have
         if not qualified_stocks:
