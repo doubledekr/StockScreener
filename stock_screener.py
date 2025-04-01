@@ -73,8 +73,130 @@ class StockScreener:
                 "ADBE", "CSCO", "PYPL", "NFLX", "PEP", "KO", "DIS", "CMCSA", "T", "VZ", 
                 "WMT", "HD", "MCD", "SBUX", "NKE", "PG", "JNJ", "PFE", "UNH", "V", "MA"]
 
+    def _fetch_time_series_batch(self, symbols, interval="1day", outputsize=365, max_batch_size=8):
+        """Fetch time series data for multiple symbols in batches"""
+        results = {}
+        
+        # Process symbols in batches
+        for i in range(0, len(symbols), max_batch_size):
+            batch = symbols[i:i+max_batch_size]
+            batch_results = self._fetch_time_series_for_batch(batch, interval, outputsize)
+            if batch_results:
+                results.update(batch_results)
+                
+        return results
+    
+    def _fetch_time_series_for_batch(self, symbols, interval="1day", outputsize=365):
+        """Fetch time series data for a batch of symbols"""
+        if not symbols:
+            return {}
+            
+        try:
+            # Check if we're already rate limited
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                logger.warning(f"Skipping API call for batch of {len(symbols)} symbols due to rate limit")
+                return {}
+            
+            # Convert symbols list to comma-separated string
+            symbols_str = ','.join(symbols)
+            
+            # Try to use cached data first for each symbol
+            results = {}
+            all_cached = True
+            
+            for symbol in symbols:
+                cache_key = f"timeseries_{symbol}_{interval}_{outputsize}"
+                if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
+                    results[symbol] = self.cache[cache_key]['data']
+                else:
+                    all_cached = False
+            
+            # If all symbols are cached, return the cached results
+            if all_cached:
+                return results
+            
+            # Make batch API request
+            params = {
+                "symbol": symbols_str,
+                "interval": interval,
+                "outputsize": outputsize,
+                "apikey": self.api_key
+            }
+            response = requests.get(f"{self.base_url}/time_series", params=params, timeout=15)
+            data = response.json()
+            
+            # Check for rate limit error
+            if isinstance(data, dict) and data.get('code') == 429:
+                logger.warning(f"Rate limit exceeded: {data.get('message')}")
+                # Mark that we've hit the rate limit to avoid further calls
+                self.cache['rate_limited'] = True
+                # Reset the rate limit flag after 60 seconds (typical rate limit window)
+                self.cache['rate_limit_reset'] = time.time() + 60
+                return results
+            
+            # Process the data - if single symbol, convert to expected format
+            if len(symbols) == 1 and 'values' in data:
+                symbol = symbols[0]
+                try:
+                    # Process single-symbol response
+                    df = pd.DataFrame(data['values'])
+                    # Convert columns to numeric
+                    for col in ['open', 'high', 'low', 'close', 'volume']:
+                        if col in df.columns:
+                            df[col] = pd.to_numeric(df[col])
+                    
+                    # Reverse the dataframe to get ascending order by date
+                    df = df.iloc[::-1].reset_index(drop=True)
+                    
+                    # Save to cache
+                    cache_key = f"timeseries_{symbol}_{interval}_{outputsize}"
+                    self.cache[cache_key] = {
+                        'data': df,
+                        'timestamp': time.time()
+                    }
+                    
+                    results[symbol] = df
+                except Exception as e:
+                    logger.error(f"Error processing time series for {symbol}: {str(e)}")
+            else:
+                # Process multi-symbol response
+                for symbol in symbols:
+                    if symbol in data:
+                        symbol_data = data[symbol]
+                        
+                        if 'values' not in symbol_data:
+                            logger.warning(f"No time series data for {symbol}")
+                            continue
+                            
+                        try:
+                            df = pd.DataFrame(symbol_data['values'])
+                            # Convert columns to numeric
+                            for col in ['open', 'high', 'low', 'close', 'volume']:
+                                if col in df.columns:
+                                    df[col] = pd.to_numeric(df[col])
+                            
+                            # Reverse the dataframe to get ascending order by date
+                            df = df.iloc[::-1].reset_index(drop=True)
+                            
+                            # Save to cache
+                            cache_key = f"timeseries_{symbol}_{interval}_{outputsize}"
+                            self.cache[cache_key] = {
+                                'data': df,
+                                'timestamp': time.time()
+                            }
+                            
+                            results[symbol] = df
+                        except Exception as e:
+                            logger.error(f"Error processing time series for {symbol}: {str(e)}")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error fetching time series batch: {str(e)}")
+            return results
+    
     def _fetch_time_series(self, symbol, interval="1day", outputsize=365):
-        """Fetch time series data for a symbol"""
+        """Fetch time series data for a single symbol"""
         try:
             # Check if we're already rate limited
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
@@ -330,6 +452,65 @@ class StockScreener:
         
         return avg_slope
 
+    def _check_technical_criteria_batch(self, symbols, max_batch_size=8):
+        """Check technical criteria for multiple symbols in batches"""
+        results = {}
+        
+        # Fetch time series data for all symbols in batches
+        time_series_data = self._fetch_time_series_batch(symbols, interval="1day", outputsize=365, max_batch_size=max_batch_size)
+        
+        # Process each symbol's data
+        for symbol, df in time_series_data.items():
+            if df is None or len(df) < 200:
+                logger.warning(f"Insufficient time series data for {symbol}")
+                results[symbol] = (False, {})
+                continue
+                
+            try:
+                # Calculate moving averages
+                sma50 = self._calculate_sma(df, 50)
+                sma100 = self._calculate_sma(df, 100)
+                sma200 = self._calculate_sma(df, 200)
+                
+                if sma50 is None or sma100 is None or sma200 is None:
+                    logger.warning(f"Couldn't calculate SMAs for {symbol}")
+                    results[symbol] = (False, {})
+                    continue
+                
+                # Get current closing price, SMAs, and SMA200 slope
+                current_price = df['close'].iloc[-1]
+                current_sma50 = sma50.iloc[-1]
+                current_sma100 = sma100.iloc[-1]
+                current_sma200 = sma200.iloc[-1]
+                sma200_slope = self._calculate_sma_slope(sma200)
+                
+                # Check technical criteria
+                criteria = {
+                    "price_above_sma200": current_price > current_sma200,
+                    "sma200_slope_positive": sma200_slope is not None and sma200_slope > 0,
+                    "sma50_above_sma200": current_sma50 > current_sma200,
+                    "sma100_above_sma200": current_sma100 > current_sma200
+                }
+                
+                # Additional data for UI - convert numpy values to Python native floats
+                metrics = {
+                    "current_price": float(current_price),
+                    "sma50": float(current_sma50),
+                    "sma100": float(current_sma100),
+                    "sma200": float(current_sma200),
+                    "sma200_slope": float(sma200_slope) if sma200_slope is not None else None
+                }
+                
+                # Check if all criteria are met
+                meets_criteria = all(criteria.values())
+                
+                results[symbol] = (meets_criteria, {**criteria, **metrics})
+            except Exception as e:
+                logger.error(f"Error checking technical criteria for {symbol}: {str(e)}")
+                results[symbol] = (False, {})
+        
+        return results
+    
     def _check_technical_criteria(self, symbol):
         """Check if a stock meets the technical criteria"""
         df = self._fetch_time_series(symbol)
@@ -491,7 +672,7 @@ class StockScreener:
         }
 
     def get_top_stocks(self, limit=10):
-        """Get the top stocks based on the screening criteria"""
+        """Get the top stocks based on the screening criteria using batch processing"""
         # Safety check for API key
         if not self.api_key:
             logger.error("No TwelveData API key provided")
@@ -516,27 +697,40 @@ class StockScreener:
             if symbol not in combined_symbols:
                 combined_symbols.append(symbol)
                 
-        # TwelveData free tier has a limit of ~610 credits per minute
-        # Each stock screening can use 50+ credits, so we limit to a small number
-        max_symbols = min(10, len(combined_symbols))  # Limit to max 10 symbols for free tier API
+        # TwelveData API has a limit, but with batching we can process more
+        # For free tier, limit to 30 initial symbols for technical screening
+        max_symbols = min(30, len(combined_symbols))
         symbols = combined_symbols[:max_symbols]
-        logger.debug(f"Got {len(symbols)} symbols for screening [{', '.join(symbols[:5])}...]")
+        logger.debug(f"Got {len(symbols)} symbols for batch screening [{', '.join(symbols[:5])}...]")
         
         qualified_stocks = []
-        processed_count = 0
+        batch_size = 8  # Maximum symbols per batch for TwelveData free tier
         
-        # Process each symbol without sleeping (which would block the worker)
-        for i, symbol in enumerate(symbols):
+        # STEP 1: First batch-screen all symbols for technical criteria
+        logger.debug(f"Starting technical batch screening for {len(symbols)} symbols")
+        technical_results = self._check_technical_criteria_batch(symbols, max_batch_size=batch_size)
+        
+        # STEP 2: Filter symbols that passed technical criteria
+        technical_passed_symbols = []
+        for symbol, (passed, tech_data) in technical_results.items():
+            if passed:
+                technical_passed_symbols.append((symbol, tech_data))
+        
+        logger.debug(f"{len(technical_passed_symbols)} symbols passed technical criteria")
+        
+        # If no symbols passed technical criteria, return early
+        if not technical_passed_symbols:
+            logger.warning("No stocks passed technical criteria")
+            return []
+        
+        # STEP 3: For each symbol that passed technical screening, check fundamentals individually
+        # This is necessary because the TwelveData API doesn't support batch fundamentals
+        processed_count = 0
+        for symbol, technical_data in technical_passed_symbols:
             try:
-                logger.debug(f"Screening stock: {symbol}")
-                technical_passed, technical_data = self._check_technical_criteria(symbol)
-                processed_count += 1
-                
-                # Skip stocks that don't meet technical criteria to save API calls
-                if not technical_passed:
-                    continue
-                    
+                logger.debug(f"Checking fundamentals for {symbol}")
                 fundamental_passed, fundamental_data = self._check_fundamental_criteria(symbol)
+                processed_count += 1
                 
                 # If a 429 rate limit error occurred, return early with what we have
                 if 'rate_limited' in self.cache and self.cache['rate_limited']:
@@ -544,7 +738,7 @@ class StockScreener:
                     break
                 
                 # If both technical and fundamental criteria are met
-                if technical_passed and fundamental_passed:
+                if fundamental_passed:
                     chart_data = self._prepare_chart_data(symbol)
                     
                     # Create a score based on growth metrics for ranking
@@ -571,13 +765,8 @@ class StockScreener:
                     if len(qualified_stocks) >= limit:
                         break
             except Exception as e:
-                logger.error(f"Error processing stock {symbol}: {str(e)}")
-                # Continue with the next stock
+                logger.error(f"Error processing fundamentals for {symbol}: {str(e)}")
                 continue
-                
-            # Break if we've processed enough stocks or have enough qualified ones
-            if processed_count >= max_symbols or len(qualified_stocks) >= limit:
-                break
         
         # Sort and limit to top stocks
         if qualified_stocks:
