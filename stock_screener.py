@@ -964,54 +964,67 @@ class StockScreener:
             income_statement = fundamentals.get('income_statement', {})
             estimates = fundamentals.get('estimates', {})
             
+            # Initialize growth values as None to start
+            q_revenue_growth = None
+            q_eps_growth = None
+            sales_growth_est = None
+            eps_growth_est = None
+            
             # Check if we have pre-calculated growth rates first (from the enhanced earnings endpoint)
-            if 'quarterly_sales_growth' in fundamentals and 'quarterly_eps_growth' in fundamentals:
-                # Use pre-calculated values
+            if 'quarterly_sales_growth' in fundamentals and fundamentals['quarterly_sales_growth'] is not None:
                 q_revenue_growth = float(fundamentals['quarterly_sales_growth'])
+            
+            if 'quarterly_eps_growth' in fundamentals and fundamentals['quarterly_eps_growth'] is not None:
                 q_eps_growth = float(fundamentals['quarterly_eps_growth'])
+                
+            if q_revenue_growth is not None and q_eps_growth is not None:
                 logger.debug(f"Using pre-calculated growth rates for {symbol}: revenue={q_revenue_growth:.2f}%, eps={q_eps_growth:.2f}%")
             else:
                 # Fall back to calculating them here
                 # Get quarterly data
                 quarterly = income_statement.get('quarterly', [])
-                if not quarterly or len(quarterly) < 2:
-                    logger.warning(f"Insufficient quarterly data for {symbol}")
-                    return False, {}
+                if quarterly and len(quarterly) >= 2:                    
+                    # Calculate quarterly growth rates
+                    current_q = quarterly[0]
+                    prev_q = quarterly[1]
                     
-                # Calculate quarterly growth rates
-                current_q = quarterly[0]
-                prev_q = quarterly[1]
-                
-                # Revenue growth
-                curr_q_revenue = float(current_q.get('revenue', 0) or 0)
-                prev_q_revenue = float(prev_q.get('revenue', 0) or 0)
-                q_revenue_growth = ((curr_q_revenue / prev_q_revenue) - 1) * 100 if prev_q_revenue else 0
-                
-                # EPS growth
-                curr_q_eps = float(current_q.get('eps', 0) or 0)
-                prev_q_eps = float(prev_q.get('eps', 0) or 0)
-                q_eps_growth = ((curr_q_eps / prev_q_eps) - 1) * 100 if prev_q_eps else 0
+                    # Revenue growth
+                    curr_q_revenue = float(current_q.get('revenue', 0) or 0)
+                    prev_q_revenue = float(prev_q.get('revenue', 0) or 0)
+                    if q_revenue_growth is None and prev_q_revenue:
+                        q_revenue_growth = ((curr_q_revenue / prev_q_revenue) - 1) * 100
+                    
+                    # EPS growth
+                    curr_q_eps = float(current_q.get('eps', 0) or 0)
+                    prev_q_eps = float(prev_q.get('eps', 0) or 0)
+                    if q_eps_growth is None and prev_q_eps:
+                        q_eps_growth = ((curr_q_eps / prev_q_eps) - 1) * 100
+                else:
+                    logger.warning(f"Insufficient quarterly data for {symbol}")
             
             # Get estimates
             annual_estimates = estimates.get('annual', {})
-            sales_growth_est = float(annual_estimates.get('revenue_growth', 0) or 0)
-            eps_growth_est = float(annual_estimates.get('eps_growth', 0) or 0)
+            if 'revenue_growth' in annual_estimates and annual_estimates['revenue_growth'] is not None:
+                sales_growth_est = float(annual_estimates['revenue_growth'])
+            
+            if 'eps_growth' in annual_estimates and annual_estimates['eps_growth'] is not None:
+                eps_growth_est = float(annual_estimates['eps_growth'])
             
             # Check fundamental criteria - less strict requirements
             # Instead of requiring ALL criteria, we only require at least 3 out of 4 to be positive
             criteria = {
-                "quarterly_sales_growth_positive": q_revenue_growth > 0,
-                "quarterly_eps_growth_positive": q_eps_growth > 0,
-                "estimated_sales_growth_positive": sales_growth_est > 0,
-                "estimated_eps_growth_positive": eps_growth_est > 0
+                "quarterly_sales_growth_positive": q_revenue_growth is not None and q_revenue_growth > 0,
+                "quarterly_eps_growth_positive": q_eps_growth is not None and q_eps_growth > 0,
+                "estimated_sales_growth_positive": sales_growth_est is not None and sales_growth_est > 0,
+                "estimated_eps_growth_positive": eps_growth_est is not None and eps_growth_est > 0
             }
             
-            # Additional data for UI - convert values to native Python types
+            # Additional data for UI - convert values to native Python types, preserving None
             metrics = {
-                "quarterly_sales_growth": float(q_revenue_growth),
-                "quarterly_eps_growth": float(q_eps_growth),
-                "estimated_sales_growth": float(sales_growth_est),
-                "estimated_eps_growth": float(eps_growth_est),
+                "quarterly_sales_growth": float(q_revenue_growth) if q_revenue_growth is not None else None,
+                "quarterly_eps_growth": float(q_eps_growth) if q_eps_growth is not None else None,
+                "estimated_sales_growth": float(sales_growth_est) if sales_growth_est is not None else None,
+                "estimated_eps_growth": float(eps_growth_est) if eps_growth_est is not None else None,
                 "company_name": fundamentals.get('general', {}).get('name', symbol)
             }
             
@@ -1035,17 +1048,17 @@ class StockScreener:
             
             # We'll still track these metrics for ranking and sorting
             exceptional_growth = any([
-                q_revenue_growth > 20,       # Exceptional revenue growth
-                q_eps_growth > 20,           # Exceptional EPS growth
-                sales_growth_est > 15,       # Strong estimated sales growth
-                eps_growth_est > 15          # Strong estimated EPS growth
+                q_revenue_growth is not None and q_revenue_growth > 20,       # Exceptional revenue growth
+                q_eps_growth is not None and q_eps_growth > 20,           # Exceptional EPS growth
+                sales_growth_est is not None and sales_growth_est > 15,       # Strong estimated sales growth
+                eps_growth_est is not None and eps_growth_est > 15          # Strong estimated EPS growth
             ])
             
             moderate_growth = any([
-                q_revenue_growth > 10,       # Good revenue growth
-                q_eps_growth > 10,           # Good EPS growth
-                sales_growth_est > 5,        # Decent estimated sales growth
-                eps_growth_est > 5           # Decent estimated EPS growth
+                q_revenue_growth is not None and q_revenue_growth > 10,       # Good revenue growth
+                q_eps_growth is not None and q_eps_growth > 10,           # Good EPS growth
+                sales_growth_est is not None and sales_growth_est > 5,        # Decent estimated sales growth
+                eps_growth_est is not None and eps_growth_est > 5           # Decent estimated EPS growth
             ])
             
             # Relaxed criteria (as before)
@@ -1083,12 +1096,21 @@ class StockScreener:
                     })
             
             # Detailed logging to understand which criteria are being met/missed
-            logger.debug(
-                f"{symbol} metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}, "
-                f"moderate: {moderate_growth}, CRITERIA MET: {meets_criteria}, "
-                f"q_rev_growth: {q_revenue_growth:.1f}%, q_eps_growth: {q_eps_growth:.1f}%, "
-                f"est_sales_growth: {sales_growth_est:.1f}%, est_eps_growth: {eps_growth_est:.1f}%"
-            )
+            try:
+                q_rev_growth_str = f"{q_revenue_growth:.1f}%" if q_revenue_growth is not None else "N/A"
+                q_eps_growth_str = f"{q_eps_growth:.1f}%" if q_eps_growth is not None else "N/A"
+                est_sales_growth_str = f"{sales_growth_est:.1f}%" if sales_growth_est is not None else "N/A"
+                est_eps_growth_str = f"{eps_growth_est:.1f}%" if eps_growth_est is not None else "N/A"
+                
+                logger.debug(
+                    f"{symbol} metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}, "
+                    f"moderate: {moderate_growth}, CRITERIA MET: {meets_criteria}, "
+                    f"q_rev_growth: {q_rev_growth_str}, q_eps_growth: {q_eps_growth_str}, "
+                    f"est_sales_growth: {est_sales_growth_str}, est_eps_growth: {est_eps_growth_str}"
+                )
+            except Exception as e:
+                logger.error(f"Error logging metrics for {symbol}: {str(e)}")
+            
             
             # Log price targets and analyst ratings if available
             if 'price_target_avg' in metrics:

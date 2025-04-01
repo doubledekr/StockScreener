@@ -357,10 +357,10 @@ def screen_stocks():
                             "sma100_above_sma200": result.sma100_above_sma200
                         },
                         "fundamental_data": {
-                            "quarterly_sales_growth": stock_fundamentals.quarterly_revenue_growth if stock_fundamentals else 0,
-                            "quarterly_eps_growth": stock_fundamentals.quarterly_eps_growth if stock_fundamentals else 0,
-                            "estimated_sales_growth": stock_fundamentals.estimated_sales_growth if stock_fundamentals else 0,
-                            "estimated_eps_growth": stock_fundamentals.estimated_eps_growth if stock_fundamentals else 0,
+                            "quarterly_sales_growth": stock_fundamentals.quarterly_revenue_growth if stock_fundamentals and stock_fundamentals.quarterly_revenue_growth is not None else None,
+                            "quarterly_eps_growth": stock_fundamentals.quarterly_eps_growth if stock_fundamentals and stock_fundamentals.quarterly_eps_growth is not None else None,
+                            "estimated_sales_growth": stock_fundamentals.estimated_sales_growth if stock_fundamentals and stock_fundamentals.estimated_sales_growth is not None else None,
+                            "estimated_eps_growth": stock_fundamentals.estimated_eps_growth if stock_fundamentals and stock_fundamentals.estimated_eps_growth is not None else None,
                             "quarterly_sales_growth_positive": result.quarterly_sales_growth_positive,
                             "quarterly_eps_growth_positive": result.quarterly_eps_growth_positive,
                             "estimated_sales_growth_positive": result.estimated_sales_growth_positive,
@@ -464,10 +464,11 @@ def screen_stocks():
                     fundamental = StockFundamentals(stock_id=stock.id)
                     db.session.add(fundamental)
                 
-                fundamental.quarterly_revenue_growth = fund_data.get("quarterly_sales_growth")
-                fundamental.quarterly_eps_growth = fund_data.get("quarterly_eps_growth")
-                fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
-                fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
+                # Update growth metrics, use None instead of 0 for missing values
+                fundamental.quarterly_revenue_growth = fund_data.get("quarterly_sales_growth") if fund_data.get("quarterly_sales_growth") is not None else None
+                fundamental.quarterly_eps_growth = fund_data.get("quarterly_eps_growth") if fund_data.get("quarterly_eps_growth") is not None else None
+                fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth") if fund_data.get("estimated_sales_growth") is not None else None
+                fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth") if fund_data.get("estimated_eps_growth") is not None else None
                 fundamental.last_updated = datetime.utcnow()
                 
                 # Store price targets if available
@@ -493,8 +494,8 @@ def screen_stocks():
                 
                 # Include all available growth metrics in the raw data
                 annual_estimates = raw_data['estimates']['annual']
-                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
-                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
+                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth") if fund_data.get("estimated_eps_growth") is not None else None
+                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth") if fund_data.get("estimated_sales_growth") is not None else None
                 
                 if 'current_quarter_growth' in fund_data:
                     annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
@@ -719,10 +720,11 @@ def get_stock_data(symbol):
                         fundamental = StockFundamentals(stock_id=db_stock.id)
                         db.session.add(fundamental)
                     
-                    fundamental.quarterly_revenue_growth = stock_data["fundamental_data"].get("quarterly_sales_growth")
-                    fundamental.quarterly_eps_growth = stock_data["fundamental_data"].get("quarterly_eps_growth")
-                    fundamental.estimated_sales_growth = stock_data["fundamental_data"].get("estimated_sales_growth")
-                    fundamental.estimated_eps_growth = stock_data["fundamental_data"].get("estimated_eps_growth")
+                    # Use None instead of 0 for missing values
+                    fundamental.quarterly_revenue_growth = stock_data["fundamental_data"].get("quarterly_sales_growth") if stock_data["fundamental_data"].get("quarterly_sales_growth") is not None else None
+                    fundamental.quarterly_eps_growth = stock_data["fundamental_data"].get("quarterly_eps_growth") if stock_data["fundamental_data"].get("quarterly_eps_growth") is not None else None
+                    fundamental.estimated_sales_growth = stock_data["fundamental_data"].get("estimated_sales_growth") if stock_data["fundamental_data"].get("estimated_sales_growth") is not None else None
+                    fundamental.estimated_eps_growth = stock_data["fundamental_data"].get("estimated_eps_growth") if stock_data["fundamental_data"].get("estimated_eps_growth") is not None else None
                     fundamental.last_updated = datetime.utcnow()
                     
                     # Store price targets if available from API data
@@ -750,8 +752,8 @@ def get_stock_data(symbol):
                     
                     # Include all available growth metrics in the raw data - convert values to native types
                     annual_estimates = raw_data['estimates']['annual']
-                    annual_estimates['eps_growth'] = stock_data["fundamental_data"].get("estimated_eps_growth", 0)
-                    annual_estimates['revenue_growth'] = stock_data["fundamental_data"].get("estimated_sales_growth", 0)
+                    annual_estimates['eps_growth'] = stock_data["fundamental_data"].get("estimated_eps_growth") if stock_data["fundamental_data"].get("estimated_eps_growth") is not None else None
+                    annual_estimates['revenue_growth'] = stock_data["fundamental_data"].get("estimated_sales_growth") if stock_data["fundamental_data"].get("estimated_sales_growth") is not None else None
                     
                     if 'current_quarter_growth' in stock_data["fundamental_data"]:
                         annual_estimates['current_quarter_growth'] = stock_data["fundamental_data"]["current_quarter_growth"]
