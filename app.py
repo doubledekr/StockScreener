@@ -1,6 +1,8 @@
 import os
 import logging
 import requests
+import json
+import numpy as np
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
 from stock_screener import StockScreener
@@ -11,13 +13,39 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+# Custom JSON encoder to handle non-serializable types
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # Handle numpy types
+        if isinstance(obj, (np.integer, np.int64, np.int32)):
+            return int(obj)
+        elif isinstance(obj, (np.floating, np.float64, np.float32)):
+            return float(obj)
+        elif isinstance(obj, (np.ndarray,)):
+            return obj.tolist()
+        elif isinstance(obj, (np.bool_)):
+            return bool(obj)
+        # Handle datetime objects
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        # Let the base class handle other types or raise TypeError
+        return super(CustomJSONEncoder, self).default(obj)
+
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "default-secret-key")
+app.json_encoder = CustomJSONEncoder  # Use our custom encoder for all JSON responses
 
-# Configure database
+# Configure database with proper connection settings for stability
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,  # Test connection before use to prevent stale connections
+    "pool_recycle": 300,    # Recycle connections after 5 minutes
+    "pool_timeout": 30,     # Connection timeout after 30 seconds
+    "pool_size": 10,        # Maximum number of connections in the pool
+    "max_overflow": 20      # Maximum number of overflow connections
+}
 db.init_app(app)
 
 # Create database tables
