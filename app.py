@@ -135,6 +135,19 @@ def screen_stocks():
                             "estimated_sales_growth": fundamentals.estimated_sales_growth,
                             "estimated_eps_growth": fundamentals.estimated_eps_growth
                         })
+                        
+                        # Add additional growth metrics from raw data if available
+                        raw_data = fundamentals.get_raw_data()
+                        if raw_data and 'estimates' in raw_data and 'annual' in raw_data['estimates']:
+                            annual_estimates = raw_data['estimates']['annual']
+                            if 'current_quarter_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["current_quarter_growth"] = annual_estimates['current_quarter_growth']
+                            if 'next_quarter_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["next_quarter_growth"] = annual_estimates['next_quarter_growth']
+                            if 'current_year_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["current_year_growth"] = annual_estimates['current_year_growth']
+                            if 'next_5_years_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["next_5_years_growth"] = annual_estimates['next_5_years_growth']
                     
                     top_stocks.append(stock_data)
                 
@@ -218,6 +231,29 @@ def screen_stocks():
                 fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
                 fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
                 fundamental.last_updated = datetime.utcnow()
+                
+                # Store the raw data for advanced metrics
+                raw_data = {
+                    'general': {'name': stock.company_name},
+                    'estimates': {'annual': {}}
+                }
+                
+                # Include all available growth metrics in the raw data
+                annual_estimates = raw_data['estimates']['annual']
+                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
+                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
+                
+                if 'current_quarter_growth' in fund_data:
+                    annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
+                if 'next_quarter_growth' in fund_data:
+                    annual_estimates['next_quarter_growth'] = fund_data.get("next_quarter_growth")
+                if 'current_year_growth' in fund_data:
+                    annual_estimates['current_year_growth'] = fund_data.get("current_year_growth")
+                if 'next_5_years_growth' in fund_data:
+                    annual_estimates['next_5_years_growth'] = fund_data.get("next_5_years_growth")
+                    
+                # Save the raw data
+                fundamental.set_raw_data(raw_data)
         
         # Commit all database changes
         db.session.commit()
@@ -283,6 +319,19 @@ def get_stock_data(symbol):
                             "estimated_eps_growth": fundamental.estimated_eps_growth,
                             "company_name": stock.company_name
                         })
+                        
+                        # Add additional growth metrics from raw data if available
+                        raw_data = fundamental.get_raw_data()
+                        if raw_data and 'estimates' in raw_data and 'annual' in raw_data['estimates']:
+                            annual_estimates = raw_data['estimates']['annual']
+                            if 'current_quarter_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["current_quarter_growth"] = annual_estimates['current_quarter_growth']
+                            if 'next_quarter_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["next_quarter_growth"] = annual_estimates['next_quarter_growth']
+                            if 'current_year_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["current_year_growth"] = annual_estimates['current_year_growth']
+                            if 'next_5_years_growth' in annual_estimates:
+                                stock_data["fundamental_data"]["next_5_years_growth"] = annual_estimates['next_5_years_growth']
                     
                     return jsonify({"success": True, "data": stock_data, "cached": True})
         
@@ -346,6 +395,29 @@ def get_stock_data(symbol):
                 fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
                 fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
                 fundamental.last_updated = datetime.utcnow()
+                
+                # Store the raw data for advanced metrics
+                raw_data = {
+                    'general': {'name': stock.company_name},
+                    'estimates': {'annual': {}}
+                }
+                
+                # Include all available growth metrics in the raw data
+                annual_estimates = raw_data['estimates']['annual']
+                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
+                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
+                
+                if 'current_quarter_growth' in fund_data:
+                    annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
+                if 'next_quarter_growth' in fund_data:
+                    annual_estimates['next_quarter_growth'] = fund_data.get("next_quarter_growth")
+                if 'current_year_growth' in fund_data:
+                    annual_estimates['current_year_growth'] = fund_data.get("current_year_growth")
+                if 'next_5_years_growth' in fund_data:
+                    annual_estimates['next_5_years_growth'] = fund_data.get("next_5_years_growth")
+                    
+                # Save the raw data
+                fundamental.set_raw_data(raw_data)
             
             # Commit changes
             db.session.commit()

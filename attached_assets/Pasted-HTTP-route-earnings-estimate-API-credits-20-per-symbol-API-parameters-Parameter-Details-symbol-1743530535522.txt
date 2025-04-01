@@ -1,0 +1,691 @@
+HTTP route
+
+/earnings_estimate
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+number_of_analysts	number of analysts that made the estimation
+avg_estimate	average estimation across analysts
+low_estimate	lowest estimation given by an analyst
+high_estimate	highest estimation given by an analyst
+year_ago_eps	average estimation of this period’s earnings given a year ago
+JSON request example
+
+https://api.twelvedata.com/earnings_estimate?symbol=aapl&apikey=demo
+
+Revenue Estimate
+This API endpoint returns analysts' estimate for a company's future quarterly and annual sales (total revenue).
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/revenue_estimate?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "revenue_estimate": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "number_of_analysts": 24,
+      "avg_estimate": 88631500000,
+      "low_estimate": 85144300000,
+      "high_estimate": 92794900000,
+      "year_ago_sales": 83360000000,
+      "sales_growth": 0.06
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "number_of_analysts": 20,
+      "avg_estimate": 127693000000,
+      "low_estimate": 122868000000,
+      "high_estimate": 132979000000,
+      "year_ago_sales": null,
+      "sales_growth": null
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "number_of_analysts": 36,
+      "avg_estimate": 392509000000,
+      "low_estimate": 389326000000,
+      "high_estimate": 396977000000,
+      "year_ago_sales": 365817000000,
+      "sales_growth": 0.07
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "number_of_analysts": 36,
+      "avg_estimate": 411466000000,
+      "low_estimate": 387836000000,
+      "high_estimate": 441307000000,
+      "year_ago_sales": 392509000000,
+      "sales_growth": 0.05
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/revenue_estimate
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+dp	• Number of decimal places for floating values
+• Should be in range [0,11] inclusive. Default 5
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+number_of_analysts	number of analysts that made the estimation
+avg_estimate	average estimation across analysts
+low_estimate	lowest estimation given by an analyst
+high_estimate	highest estimation given by an analyst
+year_ago_sales	total revenue received a year ago relative to period
+sales_growth	estimated sales growth of the period in relation to year-ago sales in prc (%)
+JSON request example
+
+https://api.twelvedata.com/revenue_estimate?symbol=aapl&apikey=demo
+
+EPS Trend
+This API endpoint returns a breakdown of the estimated historical EPS changes at a given period.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/eps_trend?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "eps_trend": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "current_estimate": 1.26,
+      "7_days_ago": 1.26,
+      "30_days_ago": 1.31,
+      "60_days_ago": 1.32,
+      "90_days_ago": 1.33
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "current_estimate": 2.12,
+      "7_days_ago": 2.11,
+      "30_days_ago": 2.18,
+      "60_days_ago": 2.19,
+      "90_days_ago": 2.19
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "current_estimate": 6.1,
+      "7_days_ago": 6.1,
+      "30_days_ago": 6.13,
+      "60_days_ago": 6.14,
+      "90_days_ago": 6.14
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "current_estimate": 6.44,
+      "7_days_ago": 6.44,
+      "30_days_ago": 6.51,
+      "60_days_ago": 6.55,
+      "90_days_ago": 6.56
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/eps_trend
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+current_estimate	actual EPS estimation for the period
+7_days_ago	EPS estimation value 7 days ago
+30_days_ago	EPS estimation value 30 days ago
+60_days_ago	EPS estimation value 60 days ago
+90_days_ago	EPS estimation value 90 days ago
+JSON request example
+
+https://api.twelvedata.com/eps_trend?symbol=aapl&apikey=demo
+
+EPS Revisions
+This API endpoint returns analysts’ revisions of a company's future quarterly and annual earnings per share (EPS) over the last week and month.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/eps_revisions?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "eps_revision": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "up_last_week": 1,
+      "up_last_month": 5,
+      "down_last_week": 0,
+      "down_last_month": 0
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "up_last_week": 1,
+      "up_last_month": 5,
+      "down_last_week": 0,
+      "down_last_month": 0
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "up_last_week": 1,
+      "up_last_month": 10,
+      "down_last_week": 0,
+      "down_last_month": 1
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "up_last_week": 1,
+      "up_last_month": 10,
+      "down_last_week": 0,
+      "down_last_month": 1
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/eps_revisions
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+up_last_week	number of up revisions over the last 7 days
+up_last_month	number of up revisions over the last 30 days
+down_last_week	number of down revisions over the last 7 days
+down_last_month	number of down revisions over the last 30 days
+JSON request example
+
+https://api.twelvedata.com/eps_revisions?symbol=aapl&apikey=demo
+
+Growth Estimates
+This API endpoint returns consensus analyst estimates over the company's growth rates for various periods. Calculation averages projections of numerous analysts, taking arbitrary parameters, such as earnings per share, revenue, etc.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/growth_estimates?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "growth_estimates": {
+    "current_quarter": 0.016,
+    "next_quarter": 0.01,
+    "current_year": 0.087,
+    "next_year": 0.055999998,
+    "next_5_years_pa": 0.094799995,
+    "past_5_years_pa": 0.23867
+  },
+  "status": "ok"
+}
+HTTP route
+
+/growth_estimates
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+current_quarter	projected growth of the current quarter in prc (%)
+next_quarter	projected growth of the next quarter in prc (%)
+current_year	projected growth of the current year in prc (%)
+next_year	projected growth of the next year in prc (%)
+next_5_years_pa	projected growth during the next 5 years in prc (%) per annum
+past_5_years_pa	actual growth over the last 5 years in prc (%) per annum
+JSON request example
+
+https://api.twelvedata.com/growth_estimates?symbol=aapl&apikey=demo
+
+RecommendationsHigh Demand
+This API endpoint returns the average of all analyst recommendations and classifies them as Strong Buy, Buy, Hold, or Sell. Also, it returns a recommendation score.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/recommendations?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "trends": {
+    "current_month": {
+      "strong_buy": 11,
+      "buy": 21,
+      "hold": 6,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "previous_month": {
+      "strong_buy": 14,
+      "buy": 24,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "2_months_ago": {
+      "strong_buy": 14,
+      "buy": 24,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "3_months_ago": {
+      "strong_buy": 13,
+      "buy": 20,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    }
+  },
+  "rating": 8.2,
+  "status": "ok"
+}
+HTTP route
+
+/recommendations
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+strong_buy	number of analysts that give a strong buy recommendation
+buy	number of analysts that give a buy recommendation
+hold	number of analysts that give a hold recommendation
+sell	number of analysts that give a sell recommendation
+strong_sell	number of analysts that give a strong sell recommendation
+rating	rating from 0 to 10 represents overall analysts’ recommendation. 0 to 2 - strong sell, 2 to 4 - sell, 4 to 6 - hold, 6 to 8 - buy, 8 to 10 - strong buy.
+JSON request example
+
+https://api.twelvedata.com/recommendations?symbol=aapl&apikey=demo
+
+Price TargetHigh Demand
+This API endpoint returns the analysts' projection of a security's future price.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/price_target?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "price_target": {
+    "high": 220,
+    "median": 185,
+    "low": 136,
+    "average": 184.01,
+    "current": 169.5672
+  },
+  "status": "ok"
+}
+HTTP route
+
+/price_target
+
+API credits
+
+75 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+high	highest price target given by an analyst
+median	median price target given across analysts
+low	lowest price target given by an analyst
+average	average price target given across analysts
+current	current price from of a security
+JSON request example
+
+https://api.twelvedata.com/price_target?symbol=aapl&apikey=demo
+
+Analyst Ratings - Light
+This API endpoint returns a lightweight version of ratings issued by analyst firms. Works for US and international markets.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/analyst_ratings/light?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "ratings": [
+    {
+      "date": "2022-08-19",
+      "firm": "Keybanc",
+      "rating_change": "Maintains",
+      "rating_current": "Overweight",
+      "rating_prior": "Overweight"
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Credit Suisse",
+      "rating_change": "Upgrade",
+      "rating_current": "Outperform",
+      "rating_prior": "Neutral"
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Wedbush",
+      "rating_change": "Maintains",
+      "rating_current": "Outperform",
+      "rating_prior": "Outperform"
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/analyst_ratings/light
+
+API credits
+
+75 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+rating_change	• Parameter is optional
+• Filter by rating change action: Maintains, Upgrade, Downgrade, Initiates or Reiterates
+outputsize	• Parameter is optional
+• Number of records in response; default 30
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+date	date when the rating was released
+firm	firm that issued the ranking
+rating_change	defines the action of the firm to ranking, could be Maintains, Upgrade, Downgrade, Initiates or Reiterates
+rating_current	current firm's ranking of the instrument
+rating_prior	prior firm's ranking of the instrument
+JSON request example
+
+https://api.twelvedata.com/analyst_ratings/light?symbol=aapl&apikey=demo
+
+https://api.twelvedata.com/analyst_ratings/light?symbol=infy&country=india&apikey=demo
+
+Analyst Ratings - US Equities
+This API endpoint returns complete information on ratings issued by analyst firms. Works only for US equities.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/analyst_ratings/us_equities?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "ratings": [
+    {
+      "date": "2022-08-19",
+      "firm": "Keybanc",
+      "analyst_name": "Brandon Nispel",
+      "rating_change": "Maintains",
+      "rating_current": "Overweight",
+      "rating_prior": "Overweight",
+      "time": "08:29:48",
+      "action_price_target": "Raises",
+      "price_target_current": 185,
+      "price_target_prior": 177
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Credit Suisse",
+      "analyst_name": "Shannon Cross",
+      "rating_change": "Upgrade",
+      "rating_current": "Outperform",
+      "rating_prior": "Neutral",
+      "time": "08:14:09",
+      "action_price_target": "Announces",
+      "price_target_current": 201,
+      "price_target_prior": null
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Wedbush",
+      "analyst_name": "Daniel Ives",
+      "rating_change": "Maintains",
+      "rating_current": "Outperform",
+      "rating_prior": "Outperform",
+      "time": "10:22:55",
+      "action_price_target": "Raises",
+      "price_target_current": 220,
+      "price_target_prior": 200
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/analyst_ratings/us_equities
+
+API credits
+
+200 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+rating_change	• Parameter is optional
+• Filter by rating change action: Maintains, Upgrade, Downgrade, Initiates, Reiterates, Assumes, or Reinstates
+outputsize	• Parameter is optional
+• Number of records in response; default 30
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+date	date when the rating was released
+firm	firm that issued the ranking
+analyst_name	name of an analyst
+rating_change	defines the action of the firm to ranking, could be Maintains, Upgrade, Downgrade, Initiates, Reiterates, Assumes, or Reinstates
+rating_current	current firm's ranking of the instrument
+rating_prior	prior firm's ranking of the instrument
+time	time when the rating was released or updated
+action_price_target	action that firm took towards target price
+price_target_current	current firm's price target for the instrument
+price_target_prior	prior firm's price target for the instrument
+JSON request example
+
+https://api.twelvedata.com/analyst_ratings/us_equities?symbol=aapl&apikey=demo
+

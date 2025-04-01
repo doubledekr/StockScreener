@@ -177,6 +177,53 @@ class StockScreener:
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
                 return None
                 
+            # Try to get growth estimates data - this provides more accurate growth numbers
+            try:
+                params = {
+                    "symbol": symbol,
+                    "apikey": self.api_key
+                }
+                response = requests.get(f"{self.base_url}/growth_estimates", params=params, timeout=10)
+                growth_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(growth_data, dict) and growth_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {growth_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
+                # Extract growth estimates from the response
+                if response.status_code == 200 and 'growth_estimates' in growth_data:
+                    estimates = growth_data['growth_estimates']
+                    # Convert from decimal to percentage
+                    fund_data['estimates']['annual'] = {
+                        'eps_growth': estimates.get('next_year', 0.05) * 100,
+                        'revenue_growth': estimates.get('next_year', 0.05) * 100,
+                        'current_quarter_growth': estimates.get('current_quarter', 0) * 100,
+                        'next_quarter_growth': estimates.get('next_quarter', 0) * 100,
+                        'current_year_growth': estimates.get('current_year', 0) * 100,
+                        'next_5_years_growth': estimates.get('next_5_years_pa', 0) * 100
+                    }
+                    logger.debug(f"Successfully got growth estimates for {symbol}")
+                else:
+                    # Default values if growth estimates are not available
+                    fund_data['estimates']['annual'] = {
+                        'eps_growth': 5.0,
+                        'revenue_growth': 5.0
+                    }
+            except Exception as e:
+                logger.warning(f"Could not get growth estimates for {symbol}: {str(e)}")
+                # Set default values if there's an error
+                fund_data['estimates']['annual'] = {
+                    'eps_growth': 5.0,
+                    'revenue_growth': 5.0
+                }
+            
+            # Check if we hit the rate limit
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                return None
+                
             # Try to get earnings data
             try:
                 params = {
@@ -210,48 +257,43 @@ class StockScreener:
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
                 return None
                 
-            # Try to get statistics data for forecasts
-            try:
-                params = {
-                    "symbol": symbol,
-                    "apikey": self.api_key
-                }
-                response = requests.get(f"{self.base_url}/statistics", params=params, timeout=10)
-                stats_data = response.json()
-                
-                # Check for rate limit
-                if isinstance(stats_data, dict) and stats_data.get('code') == 429:
-                    logger.warning(f"Rate limit exceeded: {stats_data.get('message')}")
-                    self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
-                    return None
-                
-                if response.status_code == 200:
-                    # Extract growth estimates
-                    if stats_data and isinstance(stats_data, dict):
-                        # These fields might not exist in all API plans
-                        annual = {}
-                        if 'eps_estimate_next_year' in stats_data and 'eps_actual_previous_year' in stats_data:
-                            est = float(stats_data.get('eps_estimate_next_year', 0) or 0)
-                            prev = float(stats_data.get('eps_actual_previous_year', 0) or 0)
-                            if prev != 0:
-                                annual['eps_growth'] = ((est / prev) - 1) * 100
-                            else:
-                                annual['eps_growth'] = 0
-                        else:
-                            # Default to slightly positive growth for testing
-                            annual['eps_growth'] = 5.0
+            # Try to get statistics data for forecasts (as a fallback if growth estimates fails)
+            if 'eps_growth' not in fund_data['estimates']['annual']:
+                try:
+                    params = {
+                        "symbol": symbol,
+                        "apikey": self.api_key
+                    }
+                    response = requests.get(f"{self.base_url}/statistics", params=params, timeout=10)
+                    stats_data = response.json()
+                    
+                    # Check for rate limit
+                    if isinstance(stats_data, dict) and stats_data.get('code') == 429:
+                        logger.warning(f"Rate limit exceeded: {stats_data.get('message')}")
+                        self.cache['rate_limited'] = True
+                        self.cache['rate_limit_reset'] = time.time() + 60
+                        return None
+                    
+                    if response.status_code == 200:
+                        # Extract growth estimates
+                        if stats_data and isinstance(stats_data, dict):
+                            # These fields might not exist in all API plans
+                            annual = fund_data['estimates']['annual']
+                            if 'eps_estimate_next_year' in stats_data and 'eps_actual_previous_year' in stats_data:
+                                est = float(stats_data.get('eps_estimate_next_year', 0) or 0)
+                                prev = float(stats_data.get('eps_actual_previous_year', 0) or 0)
+                                if prev != 0:
+                                    annual['eps_growth'] = ((est / prev) - 1) * 100
+                                else:
+                                    annual['eps_growth'] = 0
                             
-                        # Revenue growth is often not available in basic API, use reasonable default
-                        annual['revenue_growth'] = 5.0
-                        
-                        fund_data['estimates']['annual'] = annual
-            except Exception as e:
-                logger.warning(f"Could not get statistics data for {symbol}: {str(e)}")
+                            fund_data['estimates']['annual'] = annual
+                except Exception as e:
+                    logger.warning(f"Could not get statistics data for {symbol}: {str(e)}")
             
-            # Ensure we have the minimum required data (at least company name and quarterly data)
-            if 'quarterly' in fund_data['income_statement'] and len(fund_data['income_statement']['quarterly']) >= 2:
-                # Save to cache only if we have valid data
+            # Even without all fundamental data, return what we have if we at least have growth estimates
+            if len(fund_data['estimates']['annual']) > 0 or ('quarterly' in fund_data['income_statement'] and len(fund_data['income_statement']['quarterly']) >= 1):
+                # Save to cache
                 self.cache[cache_key] = {
                     'data': fund_data,
                     'timestamp': time.time()
@@ -390,6 +432,18 @@ class StockScreener:
                 "estimated_eps_growth": eps_growth_est,
                 "company_name": fundamentals.get('general', {}).get('name', symbol)
             }
+            
+            # Add extra growth metrics if available
+            if 'annual' in estimates:
+                annual_data = estimates['annual']
+                if 'current_quarter_growth' in annual_data:
+                    metrics['current_quarter_growth'] = annual_data['current_quarter_growth']
+                if 'next_quarter_growth' in annual_data:
+                    metrics['next_quarter_growth'] = annual_data['next_quarter_growth']
+                if 'current_year_growth' in annual_data:
+                    metrics['current_year_growth'] = annual_data['current_year_growth']
+                if 'next_5_years_growth' in annual_data:
+                    metrics['next_5_years_growth'] = annual_data['next_5_years_growth']
             
             # Check if all criteria are met
             meets_criteria = all(criteria.values())

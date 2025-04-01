@@ -170,13 +170,32 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${createMetricRow('SMA100 > SMA200', `${formatPercent(((stock.technical_data.sma100 / stock.technical_data.sma200) - 1) * 100, 1)}`, stock.technical_data.sma100_above_sma200)}
                 `;
                 
-                // Populate fundamental metrics
-                fundamentalMetrics.innerHTML = `
+                // Populate fundamental metrics with expanded growth data
+                let fundamentalHTML = `
                     ${createMetricRow('Quarterly Sales Growth', formatPercent(stock.fundamental_data.quarterly_sales_growth), stock.fundamental_data.quarterly_sales_growth_positive)}
                     ${createMetricRow('Quarterly EPS Growth', formatPercent(stock.fundamental_data.quarterly_eps_growth), stock.fundamental_data.quarterly_eps_growth_positive)}
                     ${createMetricRow('Est. Sales Growth (Year)', formatPercent(stock.fundamental_data.estimated_sales_growth), stock.fundamental_data.estimated_sales_growth_positive)}
                     ${createMetricRow('Est. EPS Growth (Year)', formatPercent(stock.fundamental_data.estimated_eps_growth), stock.fundamental_data.estimated_eps_growth_positive)}
                 `;
+                
+                // Add additional growth metrics if available
+                if (stock.fundamental_data.current_quarter_growth !== undefined) {
+                    fundamentalHTML += createMetricRow('Current Quarter Growth', formatPercent(stock.fundamental_data.current_quarter_growth));
+                }
+                
+                if (stock.fundamental_data.next_quarter_growth !== undefined) {
+                    fundamentalHTML += createMetricRow('Next Quarter Growth', formatPercent(stock.fundamental_data.next_quarter_growth));
+                }
+                
+                if (stock.fundamental_data.current_year_growth !== undefined) {
+                    fundamentalHTML += createMetricRow('Current Year Growth', formatPercent(stock.fundamental_data.current_year_growth));
+                }
+                
+                if (stock.fundamental_data.next_5_years_growth !== undefined) {
+                    fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(stock.fundamental_data.next_5_years_growth));
+                }
+                
+                fundamentalMetrics.innerHTML = fundamentalHTML;
                 
                 // Create the price chart
                 if (stock.chart_data) {
