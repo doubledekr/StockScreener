@@ -327,8 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                         <tr>
                                                             <td>${rating.date}</td>
                                                             <td>${rating.firm}</td>
-                                                            <td>${rating.rating_change}</td>
-                                                            <td>${rating.rating_current}</td>
+                                                            <td>${rating.action || 'N/A'}</td>
+                                                            <td>${rating.rating || 'N/A'}</td>
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
@@ -656,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             const mostRecent = stock.analyst_ratings.detailed_ratings[0];
                             analystRatings += `
                                 <div class="small text-muted mt-1">
-                                    Latest: ${mostRecent.firm} - ${mostRecent.rating_change} ${mostRecent.rating_current}
+                                    Latest: ${mostRecent.firm} - ${mostRecent.action || 'N/A'} ${mostRecent.rating || 'N/A'}
                                 </div>
                             `;
                         }

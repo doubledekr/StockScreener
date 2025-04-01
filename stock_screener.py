@@ -570,8 +570,8 @@ class StockScreener:
                     estimates = growth_data['growth_estimates']
                     # Convert from decimal to percentage
                     fund_data['estimates']['annual'] = {
-                        'eps_growth': estimates.get('next_year', 0.05) * 100,
-                        'revenue_growth': estimates.get('next_year', 0.05) * 100,
+                        'eps_growth': estimates.get('next_year') * 100 if estimates.get('next_year') is not None else None,
+                        'revenue_growth': estimates.get('next_year') * 100 if estimates.get('next_year') is not None else None,
                         'current_quarter_growth': estimates.get('current_quarter', 0) * 100,
                         'next_quarter_growth': estimates.get('next_quarter', 0) * 100,
                         'current_year_growth': estimates.get('current_year', 0) * 100,
