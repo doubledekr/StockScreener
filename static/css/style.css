@@ -1,0 +1,68 @@
+/* Custom styles for Stock Screener */
+
+/* Add some padding to the bottom for scrolling space */
+body {
+    padding-bottom: 2rem;
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Mini-chart styles */
+.mini-chart-container {
+    height: 40px;
+    width: 100px;
+}
+
+/* Adjust the chart container in the modal */
+#priceChart {
+    width: 100%;
+    height: 300px;
+}
+
+/* Make the price stand out */
+.current-price {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Center align the loading spinner */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .col-lg-6.mb-4 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Improve table appearance */
+.table-sm td {
+    padding: 0.5rem;
+}
+
+/* Fix for chart tooltip in dark mode */
+.chartjs-tooltip {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 3px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
