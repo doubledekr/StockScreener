@@ -123,6 +123,72 @@ class StockScreener:
             # Energy stocks
             "XOM", "CVX", "COP", "EOG", "SLB", "PXD", "OXY", "MPC", "PSX", "VLO"
         ]
+    
+    def _get_russell2000_symbols(self):
+        """Get list of Russell 2000 small-cap stock symbols"""
+        try:
+            # Since Russell 2000 constituents change and there's no official free API,
+            # we'll try to get a list of small-cap stocks that are likely to be in the Russell 2000
+            russell_symbols = []
+            
+            # Try to get from ETF holdings (IWM = iShares Russell 2000 ETF)
+            try:
+                response = requests.get("https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund", timeout=10)
+                if response.status_code == 200:
+                    # Parse CSV data
+                    csv_data = response.text.splitlines()
+                    
+                    # Skip header rows
+                    start_index = 0
+                    for i, line in enumerate(csv_data):
+                        if "Ticker" in line:
+                            start_index = i + 1
+                            break
+                    
+                    # Extract symbols from CSV rows
+                    for i in range(start_index, len(csv_data)):
+                        line = csv_data[i]
+                        if not line or ',' not in line:
+                            continue
+                            
+                        parts = line.split(',')
+                        if len(parts) >= 2:
+                            symbol = parts[0].strip().upper()
+                            # Only include valid-looking ticker symbols
+                            if symbol and len(symbol) < 6 and symbol.isalpha():
+                                russell_symbols.append(symbol)
+            except Exception as e:
+                logger.warning(f"Could not get Russell 2000 symbols from primary source: {str(e)}")
+            
+            if russell_symbols:
+                logger.debug(f"Got {len(russell_symbols)} Russell 2000 symbols")
+                return russell_symbols
+                
+            # Fallback to a representative list of small caps
+            logger.warning("Could not get Russell 2000 symbols, using fallback")
+            return self._get_small_cap_fallback_symbols()
+        except Exception as e:
+            logger.error(f"Error getting Russell 2000 symbols: {str(e)}")
+            return self._get_small_cap_fallback_symbols()
+    
+    def _get_small_cap_fallback_symbols(self):
+        """Return a list of representative small cap stocks as fallback"""
+        # A diverse selection of small cap stocks across sectors
+        small_caps = [
+            # Technology
+            'APPS', 'BAND', 'CRWD', 'DDOG', 'APPN', 'NEWR', 'ZS', 'EVBG', 'TWLO',
+            # Healthcare
+            'AHCO', 'CNST', 'AMRN', 'IMGN', 'NKTR', 'CORT', 'INO', 'XNCR',
+            # Consumer
+            'PLAY', 'PRTY', 'CAKE', 'AN', 'DKS', 'BOOT', 'PLCE', 'CONN',
+            # Financial
+            'LC', 'TREE', 'VIRT', 'PACW', 'PB', 'HOPE', 'SPWR',
+            # Industrial
+            'AAWW', 'WERN', 'MRTN', 'KNX', 'MATW', 'MLI', 'NSSC',
+            # Others
+            'AR', 'SM', 'MGY', 'CLF', 'X', 'ARCH', 'BTU', 'AA'
+        ]
+        return small_caps
             
     def _get_fallback_symbols(self):
         """Return a fallback list of popular stocks"""
@@ -861,11 +927,12 @@ class StockScreener:
         # First, try to get market movers which are likely to be trending stocks
         market_movers = self._get_market_movers()
         
-        # Then get S&P 500 and Nasdaq 100 stocks for a comprehensive coverage
+        # Then get S&P 500, Nasdaq 100, and Russell 2000 stocks for a comprehensive coverage
         sp500_symbols = self._get_sp500_symbols()
         nasdaq100_symbols = self._get_nasdaq100_symbols()
+        russell2000_symbols = self._get_russell2000_symbols()
         
-        # Combine symbols with priority: market movers, then S&P 500, then Nasdaq 100
+        # Combine symbols with priority: market movers, then S&P 500, then Nasdaq 100, then Russell 2000
         combined_symbols = []
         
         # Helper to filter out warrant symbols (typically end with W)
@@ -893,9 +960,14 @@ class StockScreener:
             if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
                 
+        # Then add Russell 2000 stocks (small caps)
+        for symbol in russell2000_symbols:
+            if symbol not in combined_symbols and is_regular_stock(symbol):
+                combined_symbols.append(symbol)
+                
         # With batching we can process more symbols efficiently
-        # Increased from 30 to 50 for better coverage while still being API-efficient
-        max_symbols = min(50, len(combined_symbols))
+        # Increased from 100 to 200 for broader market coverage including small caps
+        max_symbols = min(200, len(combined_symbols))
         symbols = combined_symbols[:max_symbols]
         logger.debug(f"Got {len(symbols)} symbols for batch screening [{', '.join(symbols[:5])}...]")
         
