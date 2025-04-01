@@ -1,0 +1,464 @@
+[CRITICAL] WORKER TIMEOUT (pid:367)
+[2025-04-01 17:50:14 +0000] [367] [ERROR] Error handling request /api/screen?use_cache=true
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 105, in screen_stocks
+    top_stocks = screener.get_top_stocks()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/stock_screener.py", line 365, in get_top_stocks
+    time.sleep(1.0)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-04-01 17:50:14 +0000] [367] [INFO] Worker exiting (pid: 367)
+[2025-04-01 17:50:14 +0000] [532] [INFO] Booting worker with pid: 532
+DEBUG:app:Starting stock screening process
+DEBUG:app:No cached results or cache bypass requested, fetching from API
+DEBUG:stock_screener:Got 100 symbols for screening
+DEBUG:stock_screener:Screening stock: MMM
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=MMM&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /profile?symbol=MMM&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /earnings?symbol=MMM&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /statistics?symbol=MMM&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:stock_screener:Screening stock: AOS
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AOS&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:stock_screener:Screening stock: ABT
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ABT&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /profile?symbol=ABT&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /earnings?symbol=ABT&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /statistics?symbol=ABT&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:stock_screener:Screening stock: ABBV
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ABBV&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /profile?symbol=ABBV&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /earnings?symbol=ABBV&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /statistics?symbol=ABBV&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:Insufficient quarterly data for ABBV
+DEBUG:stock_screener:Screening stock: ACN
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ACN&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ACN: {'code': 429, 'message': 'You have run out of API credits for the current minute. 663 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ACN
+DEBUG:stock_screener:Screening stock: ADBE
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ADBE&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ADBE: {'code': 429, 'message': 'You have run out of API credits for the current minute. 664 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ADBE
+DEBUG:stock_screener:Screening stock: AMD
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMD&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMD: {'code': 429, 'message': 'You have run out of API credits for the current minute. 665 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMD
+DEBUG:stock_screener:Screening stock: AES
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AES&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AES: {'code': 429, 'message': 'You have run out of API credits for the current minute. 666 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AES
+DEBUG:stock_screener:Screening stock: AFL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AFL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AFL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 667 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AFL
+DEBUG:stock_screener:Screening stock: A
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=A&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for A: {'code': 429, 'message': 'You have run out of API credits for the current minute. 668 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for A
+DEBUG:stock_screener:Screening stock: APD
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=APD&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for APD: {'code': 429, 'message': 'You have run out of API credits for the current minute. 669 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for APD
+DEBUG:stock_screener:Screening stock: ABNB
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ABNB&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ABNB: {'code': 429, 'message': 'You have run out of API credits for the current minute. 670 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ABNB
+DEBUG:stock_screener:Screening stock: AKAM
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AKAM&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AKAM: {'code': 429, 'message': 'You have run out of API credits for the current minute. 671 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AKAM
+DEBUG:stock_screener:Screening stock: ALB
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ALB&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ALB: {'code': 429, 'message': 'You have run out of API credits for the current minute. 672 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ALB
+DEBUG:stock_screener:Screening stock: ARE
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ARE&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ARE: {'code': 429, 'message': 'You have run out of API credits for the current minute. 673 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ARE
+DEBUG:stock_screener:Screening stock: ALGN
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ALGN&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ALGN: {'code': 429, 'message': 'You have run out of API credits for the current minute. 674 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ALGN
+DEBUG:stock_screener:Screening stock: ALLE
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ALLE&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ALLE: {'code': 429, 'message': 'You have run out of API credits for the current minute. 675 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ALLE
+DEBUG:stock_screener:Screening stock: LNT
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=LNT&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for LNT: {'code': 429, 'message': 'You have run out of API credits for the current minute. 676 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for LNT
+DEBUG:stock_screener:Screening stock: ALL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ALL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ALL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 677 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ALL
+DEBUG:stock_screener:Screening stock: GOOGL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=GOOGL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for GOOGL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 678 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for GOOGL
+DEBUG:stock_screener:Screening stock: GOOG
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=GOOG&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for GOOG: {'code': 429, 'message': 'You have run out of API credits for the current minute. 679 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for GOOG
+DEBUG:stock_screener:Screening stock: MO
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=MO&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for MO: {'code': 429, 'message': 'You have run out of API credits for the current minute. 680 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for MO
+DEBUG:stock_screener:Screening stock: AMZN
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMZN&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMZN: {'code': 429, 'message': 'You have run out of API credits for the current minute. 681 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMZN
+DEBUG:stock_screener:Screening stock: AMCR
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMCR&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMCR: {'code': 429, 'message': 'You have run out of API credits for the current minute. 682 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMCR
+DEBUG:stock_screener:Screening stock: AEE
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AEE&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AEE: {'code': 429, 'message': 'You have run out of API credits for the current minute. 683 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AEE
+DEBUG:stock_screener:Screening stock: AEP
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AEP&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AEP: {'code': 429, 'message': 'You have run out of API credits for the current minute. 684 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AEP
+DEBUG:stock_screener:Screening stock: AXP
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AXP&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AXP: {'code': 429, 'message': 'You have run out of API credits for the current minute. 685 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AXP
+DEBUG:stock_screener:Screening stock: AIG
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AIG&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AIG: {'code': 429, 'message': 'You have run out of API credits for the current minute. 686 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AIG
+DEBUG:stock_screener:Screening stock: AMT
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMT&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMT: {'code': 429, 'message': 'You have run out of API credits for the current minute. 687 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMT
+DEBUG:stock_screener:Screening stock: AWK
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AWK&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AWK: {'code': 429, 'message': 'You have run out of API credits for the current minute. 688 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AWK
+DEBUG:stock_screener:Screening stock: AMP
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMP&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMP: {'code': 429, 'message': 'You have run out of API credits for the current minute. 689 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMP
+DEBUG:stock_screener:Screening stock: AME
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AME&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AME: {'code': 429, 'message': 'You have run out of API credits for the current minute. 690 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AME
+DEBUG:stock_screener:Screening stock: AMGN
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMGN&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMGN: {'code': 429, 'message': 'You have run out of API credits for the current minute. 691 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMGN
+DEBUG:stock_screener:Screening stock: APH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=APH&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for APH: {'code': 429, 'message': 'You have run out of API credits for the current minute. 692 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for APH
+DEBUG:stock_screener:Screening stock: ADI
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ADI&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ADI: {'code': 429, 'message': 'You have run out of API credits for the current minute. 693 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ADI
+DEBUG:stock_screener:Screening stock: ANSS
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ANSS&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ANSS: {'code': 429, 'message': 'You have run out of API credits for the current minute. 694 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ANSS
+DEBUG:stock_screener:Screening stock: AON
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AON&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AON: {'code': 429, 'message': 'You have run out of API credits for the current minute. 695 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AON
+DEBUG:stock_screener:Screening stock: APA
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=APA&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for APA: {'code': 429, 'message': 'You have run out of API credits for the current minute. 696 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for APA
+DEBUG:stock_screener:Screening stock: APO
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=APO&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for APO: {'code': 429, 'message': 'You have run out of API credits for the current minute. 697 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for APO
+DEBUG:stock_screener:Screening stock: AAPL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AAPL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AAPL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 698 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AAPL
+DEBUG:stock_screener:Screening stock: AMAT
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AMAT&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AMAT: {'code': 429, 'message': 'You have run out of API credits for the current minute. 699 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AMAT
+DEBUG:stock_screener:Screening stock: APTV
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=APTV&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for APTV: {'code': 429, 'message': 'You have run out of API credits for the current minute. 700 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for APTV
+DEBUG:stock_screener:Screening stock: ACGL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ACGL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ACGL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 701 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ACGL
+DEBUG:stock_screener:Screening stock: ADM
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ADM&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ADM: {'code': 429, 'message': 'You have run out of API credits for the current minute. 702 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ADM
+DEBUG:stock_screener:Screening stock: ANET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ANET&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ANET: {'code': 429, 'message': 'You have run out of API credits for the current minute. 703 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ANET
+DEBUG:stock_screener:Screening stock: AJG
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AJG&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AJG: {'code': 429, 'message': 'You have run out of API credits for the current minute. 704 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AJG
+DEBUG:stock_screener:Screening stock: AIZ
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AIZ&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AIZ: {'code': 429, 'message': 'You have run out of API credits for the current minute. 705 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AIZ
+DEBUG:stock_screener:Screening stock: T
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=T&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for T: {'code': 429, 'message': 'You have run out of API credits for the current minute. 706 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for T
+DEBUG:stock_screener:Screening stock: ATO
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ATO&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ATO: {'code': 429, 'message': 'You have run out of API credits for the current minute. 707 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ATO
+DEBUG:stock_screener:Screening stock: ADSK
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ADSK&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ADSK: {'code': 429, 'message': 'You have run out of API credits for the current minute. 708 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ADSK
+DEBUG:stock_screener:Screening stock: ADP
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=ADP&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for ADP: {'code': 429, 'message': 'You have run out of API credits for the current minute. 709 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for ADP
+DEBUG:stock_screener:Screening stock: AZO
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AZO&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AZO: {'code': 429, 'message': 'You have run out of API credits for the current minute. 710 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AZO
+DEBUG:stock_screener:Screening stock: AVB
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AVB&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AVB: {'code': 429, 'message': 'You have run out of API credits for the current minute. 711 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AVB
+DEBUG:stock_screener:Screening stock: AVY
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AVY&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AVY: {'code': 429, 'message': 'You have run out of API credits for the current minute. 712 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AVY
+DEBUG:stock_screener:Screening stock: AXON
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=AXON&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for AXON: {'code': 429, 'message': 'You have run out of API credits for the current minute. 713 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for AXON
+DEBUG:stock_screener:Screening stock: BKR
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BKR&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BKR: {'code': 429, 'message': 'You have run out of API credits for the current minute. 714 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BKR
+DEBUG:stock_screener:Screening stock: BALL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BALL&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BALL: {'code': 429, 'message': 'You have run out of API credits for the current minute. 715 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BALL
+DEBUG:stock_screener:Screening stock: BAC
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BAC&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BAC: {'code': 429, 'message': 'You have run out of API credits for the current minute. 716 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BAC
+DEBUG:stock_screener:Screening stock: BAX
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BAX&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BAX: {'code': 429, 'message': 'You have run out of API credits for the current minute. 717 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BAX
+DEBUG:stock_screener:Screening stock: BDX
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BDX&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BDX: {'code': 429, 'message': 'You have run out of API credits for the current minute. 718 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BDX
+DEBUG:stock_screener:Screening stock: BRK-B
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BRK-B&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BRK-B: {'code': 429, 'message': 'You have run out of API credits for the current minute. 719 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BRK-B
+DEBUG:stock_screener:Screening stock: BBY
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BBY&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BBY: {'code': 429, 'message': 'You have run out of API credits for the current minute. 720 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BBY
+DEBUG:stock_screener:Screening stock: TECH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=TECH&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for TECH: {'code': 429, 'message': 'You have run out of API credits for the current minute. 721 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for TECH
+DEBUG:stock_screener:Screening stock: BIIB
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BIIB&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BIIB: {'code': 429, 'message': 'You have run out of API credits for the current minute. 722 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BIIB
+DEBUG:stock_screener:Screening stock: BLK
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BLK&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BLK: {'code': 429, 'message': 'You have run out of API credits for the current minute. 723 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BLK
+DEBUG:stock_screener:Screening stock: BX
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BX&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BX: {'code': 429, 'message': 'You have run out of API credits for the current minute. 724 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BX
+DEBUG:stock_screener:Screening stock: BK
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BK&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BK: {'code': 429, 'message': 'You have run out of API credits for the current minute. 725 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BK
+DEBUG:stock_screener:Screening stock: BA
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+DEBUG:urllib3.connectionpool:https://api.twelvedata.com:443 "GET /time_series?symbol=BA&interval=1day&outputsize=365&apikey=aed44b1a333842c2952e92c85453f24a HTTP/1.1" 200 None
+WARNING:stock_screener:No time series data for BA: {'code': 429, 'message': 'You have run out of API credits for the current minute. 726 API credits were used, with the current limit being 610. Wait for the next minute or consider switching to a higher tier plan at https://twelvedata.com/pricing', 'status': 'error'}
+WARNING:stock_screener:Insufficient time series data for BA
+DEBUG:stock_screener:Screening stock: BKNG
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.twelvedata.com:443
+[2025-04-01 17:50:46 +0000] [356] [CRITICAL] WORKER TIMEOUT (pid:532)
+[2025-04-01 17:50:46 +0000] [532] [ERROR] Error handling request /api/screen?use_cache=true
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app.py", line 105, in screen_stocks
+    top_stocks = screener.get_top_stocks()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/stock_screener.py", line 368, in get_top_stocks
+    technical_passed, technical_data = self._check_technical_criteria(symbol)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/stock_screener.py", line 198, in _check_technical_criteria
+    df = self._fetch_time_series(symbol)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/stock_screener.py", line 51, in _fetch_time_series
+    response = requests.get(f"{self.base_url}/time_series", params=params)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/api.py", line 59, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/urllib3/connection.py", line 516, in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 1395, in getresponse
+    response.begin()
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 325, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/http/client.py", line 286, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/ssl.py", line 1314, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/nix/store/clx0mcir7qw8zk36zbr4jra789g3knf6-python3-3.11.10/lib/python3.11/ssl.py", line 1166, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-04-01 17:50:46 +0000] [532] [INFO] Worker exiting (pid: 532)
+[2025-04-01 17:50:46 +0000] [539] [INFO] Booting worker with pid: 539

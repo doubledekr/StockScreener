@@ -38,24 +38,41 @@ class StockScreener:
     def _fetch_time_series(self, symbol, interval="1day", outputsize=365):
         """Fetch time series data for a symbol"""
         try:
+            # Check if we're already rate limited
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                logger.warning(f"Skipping API call for {symbol} due to rate limit")
+                return None
+                
+            # Try to use cached data first
             cache_key = f"timeseries_{symbol}_{interval}_{outputsize}"
             if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
                 return self.cache[cache_key]['data']
             
+            # Make API request
             params = {
                 "symbol": symbol,
                 "interval": interval,
                 "outputsize": outputsize,
                 "apikey": self.api_key
             }
-            response = requests.get(f"{self.base_url}/time_series", params=params)
-            response.raise_for_status()
+            response = requests.get(f"{self.base_url}/time_series", params=params, timeout=10)
             data = response.json()
             
+            # Check for rate limit error
+            if isinstance(data, dict) and data.get('code') == 429:
+                logger.warning(f"Rate limit exceeded: {data.get('message')}")
+                # Mark that we've hit the rate limit to avoid further calls
+                self.cache['rate_limited'] = True
+                # Reset the rate limit flag after 60 seconds (typical rate limit window)
+                self.cache['rate_limit_reset'] = time.time() + 60
+                return None
+                
+            # Check for valid data
             if 'values' not in data:
                 logger.warning(f"No time series data for {symbol}: {data}")
                 return None
                 
+            # Process the data
             df = pd.DataFrame(data['values'])
             # Convert columns to numeric
             for col in ['open', 'high', 'low', 'close', 'volume']:
@@ -79,6 +96,12 @@ class StockScreener:
     def _fetch_fundamentals(self, symbol):
         """Fetch fundamental data for a symbol"""
         try:
+            # Check if we're already rate limited
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                logger.warning(f"Skipping fundamental API calls for {symbol} due to rate limit")
+                return None
+                
+            # Check cache first
             cache_key = f"fundamentals_{symbol}"
             if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
                 return self.cache[cache_key]['data']
@@ -97,24 +120,42 @@ class StockScreener:
                     "symbol": symbol,
                     "apikey": self.api_key
                 }
-                response = requests.get(f"{self.base_url}/profile", params=params)
-                if response.status_code == 200:
-                    profile_data = response.json()
-                    if isinstance(profile_data, dict) and 'name' in profile_data:
-                        fund_data['general']['name'] = profile_data['name']
+                response = requests.get(f"{self.base_url}/profile", params=params, timeout=10)
+                data = response.json()
+                
+                # Check for rate limit
+                if isinstance(data, dict) and data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
+                if response.status_code == 200 and isinstance(data, dict) and 'name' in data:
+                    fund_data['general']['name'] = data['name']
             except Exception as e:
                 logger.warning(f"Could not get profile data for {symbol}: {str(e)}")
             
+            # Check if we hit the rate limit
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                return None
+                
             # Try to get earnings data
             try:
                 params = {
                     "symbol": symbol,
                     "apikey": self.api_key
                 }
-                response = requests.get(f"{self.base_url}/earnings", params=params)
+                response = requests.get(f"{self.base_url}/earnings", params=params, timeout=10)
+                earnings_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(earnings_data, dict) and earnings_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {earnings_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
                 if response.status_code == 200:
-                    earnings_data = response.json()
-                    
                     # Structure quarterly data
                     if earnings_data and 'earnings' in earnings_data and len(earnings_data['earnings']) >= 2:
                         quarterly = []
@@ -127,16 +168,27 @@ class StockScreener:
             except Exception as e:
                 logger.warning(f"Could not get earnings data for {symbol}: {str(e)}")
             
+            # Check if we hit the rate limit
+            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                return None
+                
             # Try to get statistics data for forecasts
             try:
                 params = {
                     "symbol": symbol,
                     "apikey": self.api_key
                 }
-                response = requests.get(f"{self.base_url}/statistics", params=params)
+                response = requests.get(f"{self.base_url}/statistics", params=params, timeout=10)
+                stats_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(stats_data, dict) and stats_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {stats_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
                 if response.status_code == 200:
-                    stats_data = response.json()
-                    
                     # Extract growth estimates
                     if stats_data and isinstance(stats_data, dict):
                         # These fields might not exist in all API plans
@@ -159,13 +211,18 @@ class StockScreener:
             except Exception as e:
                 logger.warning(f"Could not get statistics data for {symbol}: {str(e)}")
             
-            # Save to cache
-            self.cache[cache_key] = {
-                'data': fund_data,
-                'timestamp': time.time()
-            }
-            
-            return fund_data
+            # Ensure we have the minimum required data (at least company name and quarterly data)
+            if 'quarterly' in fund_data['income_statement'] and len(fund_data['income_statement']['quarterly']) >= 2:
+                # Save to cache only if we have valid data
+                self.cache[cache_key] = {
+                    'data': fund_data,
+                    'timestamp': time.time()
+                }
+                return fund_data
+            else:
+                logger.warning(f"Insufficient fundamental data for {symbol}")
+                return None
+                
         except Exception as e:
             logger.error(f"Error fetching fundamentals for {symbol}: {str(e)}")
             return None
@@ -348,22 +405,20 @@ class StockScreener:
             logger.error("No TwelveData API key provided")
             return []
             
-        # Get symbols to screen with a limit to avoid excessive API calls 
+        # Get symbols to screen with a very limited set to avoid rate limits 
         symbols = self._get_sp500_symbols()
-        max_symbols = min(100, len(symbols))  # Limit to max 100 symbols for performance
+        # TwelveData free tier has a limit of ~610 credits per minute
+        # Each stock screening can use 50+ credits, so we limit to a very small number
+        max_symbols = min(10, len(symbols))  # Limit to max 10 symbols for free tier API
         symbols = symbols[:max_symbols]
         logger.debug(f"Got {len(symbols)} symbols for screening")
         
         qualified_stocks = []
         processed_count = 0
         
-        # Add delays between batches to avoid hitting API rate limits
+        # Process each symbol without sleeping (which would block the worker)
         for i, symbol in enumerate(symbols):
             try:
-                # Add a small delay every 5 requests to avoid hitting rate limits
-                if i > 0 and i % 5 == 0:
-                    time.sleep(1.0)
-                    
                 logger.debug(f"Screening stock: {symbol}")
                 technical_passed, technical_data = self._check_technical_criteria(symbol)
                 processed_count += 1
@@ -371,10 +426,13 @@ class StockScreener:
                 # Skip stocks that don't meet technical criteria to save API calls
                 if not technical_passed:
                     continue
-                
-                # Add a small delay before fundamental data call
-                time.sleep(0.2)
+                    
                 fundamental_passed, fundamental_data = self._check_fundamental_criteria(symbol)
+                
+                # If a 429 rate limit error occurred, return early with what we have
+                if 'rate_limited' in self.cache and self.cache['rate_limited']:
+                    logger.warning("API rate limit reached, returning partial results")
+                    break
                 
                 # If both technical and fundamental criteria are met
                 if technical_passed and fundamental_passed:
