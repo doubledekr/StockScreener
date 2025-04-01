@@ -155,51 +155,104 @@ document.addEventListener('DOMContentLoaded', function() {
                 const stock = data.data;
                 
                 // Update modal content
-                modalStockName.textContent = stock.company_name;
+                modalStockName.textContent = stock.company_name || symbol;
                 modalStockSymbol.textContent = symbol;
                 
-                // Populate technical metrics
+                // Make sure tech_data and fund_data exist
+                const tech_data = stock.technical_data || {};
+                const fund_data = stock.fundamental_data || {};
+                
+                // Safely calculate percentages
+                const calcPercent = (a, b) => {
+                    if (a === null || a === undefined || b === null || b === undefined || b === 0) {
+                        return 'N/A';
+                    }
+                    return formatPercent(((a / b) - 1) * 100, 1);
+                };
+                
+                // Populate technical metrics with safer data checks
                 technicalMetrics.innerHTML = `
-                    ${createMetricRow('Current Price', `$${formatNumber(stock.technical_data.current_price)}`)}
-                    ${createMetricRow('200-day SMA', `$${formatNumber(stock.technical_data.sma200)}`)}
-                    ${createMetricRow('Price > SMA200', `${formatPercent(((stock.technical_data.current_price / stock.technical_data.sma200) - 1) * 100, 1)}`, stock.technical_data.price_above_sma200)}
-                    ${createMetricRow('SMA200 Slope', formatNumber(stock.technical_data.sma200_slope, 4), stock.technical_data.sma200_slope_positive)}
-                    ${createMetricRow('50-day SMA', `$${formatNumber(stock.technical_data.sma50)}`)}
-                    ${createMetricRow('SMA50 > SMA200', `${formatPercent(((stock.technical_data.sma50 / stock.technical_data.sma200) - 1) * 100, 1)}`, stock.technical_data.sma50_above_sma200)}
-                    ${createMetricRow('100-day SMA', `$${formatNumber(stock.technical_data.sma100)}`)}
-                    ${createMetricRow('SMA100 > SMA200', `${formatPercent(((stock.technical_data.sma100 / stock.technical_data.sma200) - 1) * 100, 1)}`, stock.technical_data.sma100_above_sma200)}
+                    ${createMetricRow('Current Price', `$${formatNumber(tech_data.current_price)}`)}
+                    ${createMetricRow('200-day SMA', `$${formatNumber(tech_data.sma200)}`)}
+                    ${createMetricRow('Price > SMA200', 
+                        (tech_data.current_price !== null && tech_data.sma200 !== null && tech_data.sma200 > 0) ? 
+                        calcPercent(tech_data.current_price, tech_data.sma200) : 'N/A', 
+                        tech_data.price_above_sma200)}
+                    ${createMetricRow('SMA200 Slope', 
+                        tech_data.sma200_slope !== null ? formatNumber(tech_data.sma200_slope, 4) : 'N/A', 
+                        tech_data.sma200_slope_positive)}
+                    ${createMetricRow('50-day SMA', `$${formatNumber(tech_data.sma50)}`)}
+                    ${createMetricRow('SMA50 > SMA200', 
+                        (tech_data.sma50 !== null && tech_data.sma200 !== null && tech_data.sma200 > 0) ? 
+                        calcPercent(tech_data.sma50, tech_data.sma200) : 'N/A', 
+                        tech_data.sma50_above_sma200)}
+                    ${createMetricRow('100-day SMA', `$${formatNumber(tech_data.sma100)}`)}
+                    ${createMetricRow('SMA100 > SMA200', 
+                        (tech_data.sma100 !== null && tech_data.sma200 !== null && tech_data.sma200 > 0) ? 
+                        calcPercent(tech_data.sma100, tech_data.sma200) : 'N/A', 
+                        tech_data.sma100_above_sma200)}
                 `;
                 
-                // Populate fundamental metrics with expanded growth data
+                // Populate fundamental metrics with safer data checks
                 let fundamentalHTML = `
-                    ${createMetricRow('Quarterly Sales Growth', formatPercent(stock.fundamental_data.quarterly_sales_growth), stock.fundamental_data.quarterly_sales_growth_positive)}
-                    ${createMetricRow('Quarterly EPS Growth', formatPercent(stock.fundamental_data.quarterly_eps_growth), stock.fundamental_data.quarterly_eps_growth_positive)}
-                    ${createMetricRow('Est. Sales Growth (Year)', formatPercent(stock.fundamental_data.estimated_sales_growth), stock.fundamental_data.estimated_sales_growth_positive)}
-                    ${createMetricRow('Est. EPS Growth (Year)', formatPercent(stock.fundamental_data.estimated_eps_growth), stock.fundamental_data.estimated_eps_growth_positive)}
+                    ${createMetricRow('Quarterly Sales Growth', 
+                        formatPercent(fund_data.quarterly_sales_growth), 
+                        fund_data.quarterly_sales_growth_positive)}
+                    ${createMetricRow('Quarterly EPS Growth', 
+                        formatPercent(fund_data.quarterly_eps_growth), 
+                        fund_data.quarterly_eps_growth_positive)}
+                    ${createMetricRow('Est. Sales Growth (Year)', 
+                        formatPercent(fund_data.estimated_sales_growth), 
+                        fund_data.estimated_sales_growth_positive)}
+                    ${createMetricRow('Est. EPS Growth (Year)', 
+                        formatPercent(fund_data.estimated_eps_growth), 
+                        fund_data.estimated_eps_growth_positive)}
                 `;
                 
                 // Add additional growth metrics if available
-                if (stock.fundamental_data.current_quarter_growth !== undefined) {
-                    fundamentalHTML += createMetricRow('Current Quarter Growth', formatPercent(stock.fundamental_data.current_quarter_growth));
+                if (fund_data.current_quarter_growth !== undefined && fund_data.current_quarter_growth !== null) {
+                    fundamentalHTML += createMetricRow('Current Quarter Growth', formatPercent(fund_data.current_quarter_growth));
                 }
                 
-                if (stock.fundamental_data.next_quarter_growth !== undefined) {
-                    fundamentalHTML += createMetricRow('Next Quarter Growth', formatPercent(stock.fundamental_data.next_quarter_growth));
+                if (fund_data.next_quarter_growth !== undefined && fund_data.next_quarter_growth !== null) {
+                    fundamentalHTML += createMetricRow('Next Quarter Growth', formatPercent(fund_data.next_quarter_growth));
                 }
                 
-                if (stock.fundamental_data.current_year_growth !== undefined) {
-                    fundamentalHTML += createMetricRow('Current Year Growth', formatPercent(stock.fundamental_data.current_year_growth));
+                if (fund_data.current_year_growth !== undefined && fund_data.current_year_growth !== null) {
+                    fundamentalHTML += createMetricRow('Current Year Growth', formatPercent(fund_data.current_year_growth));
                 }
                 
-                if (stock.fundamental_data.next_5_years_growth !== undefined) {
-                    fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(stock.fundamental_data.next_5_years_growth));
+                if (fund_data.next_5_years_growth !== undefined && fund_data.next_5_years_growth !== null) {
+                    fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(fund_data.next_5_years_growth));
+                }
+                
+                // Add a message if no fundamental data is available
+                if (Object.keys(fund_data).filter(key => fund_data[key] !== null && fund_data[key] !== undefined).length === 0) {
+                    fundamentalHTML += `<tr><td colspan="2" class="text-center text-muted">
+                        <small>No fundamental data available for this stock.</small>
+                    </td></tr>`;
                 }
                 
                 fundamentalMetrics.innerHTML = fundamentalHTML;
                 
-                // Create the price chart
-                if (stock.chart_data) {
-                    createPriceChart('priceChart', stock.chart_data);
+                // Create the price chart if data available
+                if (stock.chart_data && Object.keys(stock.chart_data).length > 0) {
+                    try {
+                        createPriceChart('priceChart', stock.chart_data);
+                    } catch (chartError) {
+                        console.error('Error creating chart:', chartError);
+                        document.getElementById('chart-container').innerHTML = `
+                            <div class="alert alert-warning">
+                                <small>Chart data is incomplete or unavailable for this stock.</small>
+                            </div>
+                        `;
+                    }
+                } else {
+                    document.getElementById('chart-container').innerHTML = `
+                        <div class="alert alert-warning">
+                            <small>No chart data available for this stock.</small>
+                        </div>
+                    `;
                 }
                 
                 // Show the content
@@ -211,10 +264,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalLoading.classList.add('d-none');
                 modalContent.classList.remove('d-none');
                 modalStockName.textContent = 'Error Loading Data';
-                modalStockSymbol.textContent = '';
+                modalStockSymbol.textContent = symbol;
                 technicalMetrics.innerHTML = `<tr><td colspan="2" class="text-center text-danger">
-                    Error loading stock details: ${error.message}
+                    <small>Error loading stock details: ${error.message}</small>
                 </td></tr>`;
+                fundamentalMetrics.innerHTML = `<tr><td colspan="2" class="text-center text-muted">
+                    <small>This issue may occur when the stock lacks sufficient trading history or fundamental data.</small>
+                </td></tr>`;
+                document.getElementById('chart-container').innerHTML = `
+                    <div class="alert alert-warning">
+                        <small>No chart data available for this stock.</small>
+                    </div>
+                `;
             });
     }
     
