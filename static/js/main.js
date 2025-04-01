@@ -70,10 +70,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Calculate percentage above SMA200
         const percentAboveSMA200 = ((stock.technical_data.current_price / stock.technical_data.sma200) - 1) * 100;
         
+        // Determine if the stock meets all criteria - use a gold border for stocks that meet all criteria
+        const cardClass = stock.meets_all_criteria ? 'card h-100 border-warning' : 'card h-100';
+        
         card.innerHTML = `
-            <div class="card h-100">
+            <div class="${cardClass}">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">${stock.symbol}</h5>
+                    <h5 class="mb-0">
+                        ${stock.symbol}
+                        ${stock.meets_all_criteria ? '<span class="badge bg-warning text-dark ms-2">All Criteria</span>' : ''}
+                    </h5>
                     <span class="badge bg-primary">${formatPercent(percentAboveSMA200, 1)} > SMA200</span>
                 </div>
                 <div class="card-body">
@@ -156,7 +162,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update modal content
                 modalStockName.textContent = stock.company_name || symbol;
-                modalStockSymbol.textContent = symbol;
+                
+                // Add a badge if stock meets all criteria
+                let symbolText = symbol;
+                if (stock.meets_all_criteria) {
+                    symbolText += ' <span class="badge bg-warning text-dark">Meets All Criteria</span>';
+                }
+                modalStockSymbol.innerHTML = symbolText;
                 
                 // Make sure tech_data and fund_data exist
                 const tech_data = stock.technical_data || {};
@@ -300,6 +312,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (stats.screening_result_count > 0) {
                             statsHtml += `<div>Saved stocks: ${stats.stock_count}</div>`;
                             statsHtml += `<div>Saved screenings: ${stats.screening_result_count}</div>`;
+                            statsHtml += `<div>Stocks passing criteria: ${stats.passing_stocks}</div>`;
+                            
+                            // Add strict criteria count if available
+                            if (stats.strict_passing_stocks !== undefined) {
+                                statsHtml += `<div>Stocks meeting ALL criteria: ${stats.strict_passing_stocks}</div>`;
+                            }
                         }
                         
                         if (stats.last_execution_time) {

@@ -688,11 +688,13 @@ class StockScreener:
                 if 'next_5_years_growth' in annual_data:
                     metrics['next_5_years_growth'] = float(annual_data['next_5_years_growth'] or 0)
             
-            # Make criteria even more flexible for screening: 
-            # Accept if at least 2 out of 4 criteria are met OR if growth rate shows promise
+            # Store the positive count for logging
             positive_count = sum(1 for value in criteria.values() if value)
             
-            # Count both exceptional growth and even moderate growth
+            # For strict matching, require ALL fundamental criteria to be met
+            meets_all_criteria = all(criteria.values())
+            
+            # We'll still track these metrics for ranking and sorting
             exceptional_growth = any([
                 q_revenue_growth > 20,       # Exceptional revenue growth
                 q_eps_growth > 20,           # Exceptional EPS growth
@@ -707,13 +709,17 @@ class StockScreener:
                 eps_growth_est > 5           # Decent estimated EPS growth
             ])
             
-            # Accept stocks with either:
-            # 1. At least 2/4 positive metrics (was 3/4 before)
-            # 2. Exceptional growth in any category
-            # 3. Moderate growth in ANY category + at least 1 positive metric
-            meets_criteria = (positive_count >= 2 or 
-                             exceptional_growth or 
-                             (moderate_growth and positive_count >= 1))
+            # Relaxed criteria (as before)
+            meets_relaxed_criteria = (positive_count >= 2 or 
+                                     exceptional_growth or 
+                                     (moderate_growth and positive_count >= 1))
+            
+            # Continue using the relaxed approach for the return value
+            meets_criteria = meets_relaxed_criteria
+            
+            # Add both metrics to the result so we can filter/sort/display accordingly
+            metrics["meets_all_fundamental_criteria"] = meets_all_criteria
+            metrics["meets_relaxed_fundamental_criteria"] = meets_relaxed_criteria
             
             # Detailed logging to understand which criteria are being met/missed
             logger.debug(
@@ -830,13 +836,19 @@ class StockScreener:
         # Always prepare chart data, which now handles missing data gracefully
         chart_data = self._prepare_chart_data(symbol)
         
+        # Check if this stock meets ALL criteria (technical + all fundamental)
+        meets_all_technical = technical_passed
+        meets_all_fundamental = fundamental_data.get("meets_all_fundamental_criteria", False) if fundamental_data else False
+        meets_all_criteria = meets_all_technical and meets_all_fundamental
+        
         return {
             "symbol": symbol,
             "company_name": company_name,
             "technical_data": technical_data if technical_data else price_data,
             "fundamental_data": fundamental_data,
             "chart_data": chart_data,
-            "passes_all_criteria": technical_passed and fundamental_passed
+            "passes_all_criteria": technical_passed and fundamental_passed,  # Using relaxed approach (backwards compatible)
+            "meets_all_criteria": meets_all_criteria  # New strict approach - ALL criteria must be met
         }
 
     def get_top_stocks(self, limit=10):
@@ -936,13 +948,18 @@ class StockScreener:
                         (float(technical_data.get("sma200_slope", 0)) * 100)  # Give weight to slope
                     )
                     
+                    # Check if this stock meets ALL criteria (strict approach)
+                    meets_all_fundamental = fundamental_data.get("meets_all_fundamental_criteria", False)
+                    meets_all_criteria = meets_all_fundamental and True  # Technical already passed at this point
+                    
                     qualified_stocks.append({
                         "symbol": symbol,
                         "company_name": fundamental_data.get("company_name", symbol),
                         "score": score,
                         "technical_data": technical_data,
                         "fundamental_data": fundamental_data,
-                        "chart_data": chart_data
+                        "chart_data": chart_data,
+                        "meets_all_criteria": meets_all_criteria  # Add this flag for UI highlighting
                     })
                     
                     logger.debug(f"Stock {symbol} qualified with score {score}")

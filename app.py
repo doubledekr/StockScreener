@@ -608,7 +608,8 @@ def get_stock_data(symbol):
                     quarterly_eps_growth_positive=stock_data["fundamental_data"].get("quarterly_eps_growth_positive", False),
                     estimated_sales_growth_positive=stock_data["fundamental_data"].get("estimated_sales_growth_positive", False),
                     estimated_eps_growth_positive=stock_data["fundamental_data"].get("estimated_eps_growth_positive", False),
-                    passes_all_criteria=stock_data.get("passes_all_criteria", False)
+                    passes_all_criteria=stock_data.get("passes_all_criteria", False),
+                    meets_all_criteria=stock_data.get("meets_all_criteria", False)
                 )
                 
                 # Set chart data
@@ -683,14 +684,22 @@ def get_database_stats():
             last_screening_time = last_session.timestamp.isoformat()
             last_execution_time = last_session.execution_time
         
-        # Get count of stocks that passed all criteria in the last screening
+        # Get counts for stocks passing different criteria in the last screening
+        passing_stocks = 0
+        strict_passing_stocks = 0
+        
         if last_session:
+            # Count stocks that passed with relaxed criteria
             passing_stocks = ScreeningResult.query.filter(
                 ScreeningResult.passes_all_criteria == True,
                 ScreeningResult.screening_date >= last_session.timestamp
             ).count()
-        else:
-            passing_stocks = 0
+            
+            # Count stocks that passed with strict criteria (all criteria must be met)
+            strict_passing_stocks = ScreeningResult.query.filter(
+                ScreeningResult.meets_all_criteria == True,
+                ScreeningResult.screening_date >= last_session.timestamp
+            ).count()
         
         stats_data = {
             "success": True,
@@ -699,7 +708,8 @@ def get_database_stats():
                 "screening_result_count": screening_count,
                 "last_screening_time": last_screening_time,
                 "last_execution_time": last_execution_time,
-                "passing_stocks": passing_stocks
+                "passing_stocks": passing_stocks,
+                "strict_passing_stocks": strict_passing_stocks
             }
         }
         return json.dumps(stats_data, cls=CustomJSONEncoder), 200, {'Content-Type': 'application/json'}

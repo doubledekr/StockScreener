@@ -116,7 +116,9 @@ class ScreeningResult(db.Model):
     sma200_slope = db.Column(db.Float)
     score = db.Column(db.Float)  # Composite score for ranking
     
-    passes_all_criteria = db.Column(db.Boolean, default=False)
+    # Results flags
+    passes_all_criteria = db.Column(db.Boolean, default=False)  # Relaxed approach (backward compatible)
+    meets_all_criteria = db.Column(db.Boolean, default=False)   # Strict approach (all criteria must be met)
     
     # Chart data stored as JSON
     chart_data = db.Column(db.Text)
