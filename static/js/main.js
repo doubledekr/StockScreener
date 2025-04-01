@@ -97,13 +97,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-6">
                             <div class="small text-muted">Quarterly Sales Growth</div>
                             <div class="${stock.fundamental_data.quarterly_sales_growth > 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercent(stock.fundamental_data.quarterly_sales_growth)}
+                                ${stock.fundamental_data.quarterly_sales_growth ? formatPercent(stock.fundamental_data.quarterly_sales_growth) : 'N/A'}
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="small text-muted">Quarterly EPS Growth</div>
                             <div class="${stock.fundamental_data.quarterly_eps_growth > 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercent(stock.fundamental_data.quarterly_eps_growth)}
+                                ${stock.fundamental_data.quarterly_eps_growth ? formatPercent(stock.fundamental_data.quarterly_eps_growth) : 'N/A'}
                             </div>
                         </div>
                     </div>
@@ -112,13 +112,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-6">
                             <div class="small text-muted">Est. Sales Growth</div>
                             <div class="${stock.fundamental_data.estimated_sales_growth > 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercent(stock.fundamental_data.estimated_sales_growth)}
+                                ${stock.fundamental_data.estimated_sales_growth ? formatPercent(stock.fundamental_data.estimated_sales_growth) : 'N/A'}
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="small text-muted">Est. EPS Growth</div>
                             <div class="${stock.fundamental_data.estimated_eps_growth > 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercent(stock.fundamental_data.estimated_eps_growth)}
+                                ${stock.fundamental_data.estimated_eps_growth ? formatPercent(stock.fundamental_data.estimated_eps_growth) : 'N/A'}
                             </div>
                         </div>
                     </div>
@@ -234,34 +234,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Populate fundamental metrics with safer data checks
                 let fundamentalHTML = `
                     ${createMetricRow('Quarterly Sales Growth', 
-                        formatPercent(fund_data.quarterly_sales_growth), 
+                        fund_data.quarterly_sales_growth ? formatPercent(fund_data.quarterly_sales_growth) : 'N/A', 
                         fund_data.quarterly_sales_growth_positive)}
                     ${createMetricRow('Quarterly EPS Growth', 
-                        formatPercent(fund_data.quarterly_eps_growth), 
+                        fund_data.quarterly_eps_growth ? formatPercent(fund_data.quarterly_eps_growth) : 'N/A', 
                         fund_data.quarterly_eps_growth_positive)}
                     ${createMetricRow('Est. Sales Growth (Year)', 
-                        formatPercent(fund_data.estimated_sales_growth), 
+                        fund_data.estimated_sales_growth ? formatPercent(fund_data.estimated_sales_growth) : 'N/A', 
                         fund_data.estimated_sales_growth_positive)}
                     ${createMetricRow('Est. EPS Growth (Year)', 
-                        formatPercent(fund_data.estimated_eps_growth), 
+                        fund_data.estimated_eps_growth ? formatPercent(fund_data.estimated_eps_growth) : 'N/A', 
                         fund_data.estimated_eps_growth_positive)}
                 `;
                 
                 // Add additional growth metrics if available
                 if (fund_data.current_quarter_growth !== undefined && fund_data.current_quarter_growth !== null) {
-                    fundamentalHTML += createMetricRow('Current Quarter Growth', formatPercent(fund_data.current_quarter_growth));
+                    fundamentalHTML += createMetricRow('Current Quarter Growth', formatPercent(fund_data.current_quarter_growth), fund_data.current_quarter_growth > 0);
                 }
                 
                 if (fund_data.next_quarter_growth !== undefined && fund_data.next_quarter_growth !== null) {
-                    fundamentalHTML += createMetricRow('Next Quarter Growth', formatPercent(fund_data.next_quarter_growth));
+                    fundamentalHTML += createMetricRow('Next Quarter Growth', formatPercent(fund_data.next_quarter_growth), fund_data.next_quarter_growth > 0);
                 }
                 
                 if (fund_data.current_year_growth !== undefined && fund_data.current_year_growth !== null) {
-                    fundamentalHTML += createMetricRow('Current Year Growth', formatPercent(fund_data.current_year_growth));
+                    fundamentalHTML += createMetricRow('Current Year Growth', formatPercent(fund_data.current_year_growth), fund_data.current_year_growth > 0);
                 }
                 
                 if (fund_data.next_5_years_growth !== undefined && fund_data.next_5_years_growth !== null) {
-                    fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(fund_data.next_5_years_growth));
+                    fundamentalHTML += createMetricRow('5-Year Growth (Annual)', formatPercent(fund_data.next_5_years_growth), fund_data.next_5_years_growth > 0);
                 }
                 
                 // Add price targets if available
@@ -677,6 +677,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                     
                     picksBody.appendChild(row);
+                });
+                
+                // Add event listeners to view details buttons in analyst picks
+                document.querySelectorAll('#analyst-picks-body .view-details').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const symbol = this.getAttribute('data-symbol');
+                        showStockDetail(symbol);
+                    });
                 });
             })
             .catch(error => {
