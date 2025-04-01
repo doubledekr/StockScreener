@@ -15,6 +15,41 @@ class StockScreener:
         self.cache = {}
         self.cache_timeout = 3600  # 1 hour cache to avoid excessive API calls
 
+    def _get_market_movers(self):
+        """Get market movers from TwelveData API"""
+        try:
+            # Check if we already have market movers in cache
+            cache_key = "market_movers"
+            if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
+                return self.cache[cache_key]['data']
+                
+            # Try to get market movers
+            params = {
+                "outputsize": 20,  # Get top 20 gainers
+                "apikey": self.api_key
+            }
+            response = requests.get(f"{self.base_url}/market_movers/stocks", params=params, timeout=10)
+            data = response.json()
+            
+            # Check for valid response
+            if 'values' not in data or not data['values']:
+                logger.warning("No market movers data available, using fallback list")
+                return self._get_fallback_symbols()
+                
+            # Extract symbols from market movers
+            symbols = [item['symbol'] for item in data['values'] if 'symbol' in item]
+            
+            # Add these symbols to cache
+            self.cache[cache_key] = {
+                'data': symbols,
+                'timestamp': time.time()
+            }
+            
+            return symbols
+        except Exception as e:
+            logger.warning(f"Error fetching market movers: {str(e)}, using fallback list")
+            return self._get_fallback_symbols()
+            
     def _get_sp500_symbols(self):
         """Get list of S&P 500 symbols"""
         try:
@@ -30,10 +65,13 @@ class StockScreener:
                 raise Exception("Using fallback list")
         except Exception as e:
             logger.warning(f"Using fallback symbol list: {str(e)}")
-            # Fallback to a smaller list of popular stocks
-            return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "AMD", "INTC", 
-                    "ADBE", "CSCO", "PYPL", "NFLX", "PEP", "KO", "DIS", "CMCSA", "T", "VZ", 
-                    "WMT", "HD", "MCD", "SBUX", "NKE", "PG", "JNJ", "PFE", "UNH", "V", "MA"]
+            return self._get_fallback_symbols()
+            
+    def _get_fallback_symbols(self):
+        """Return a fallback list of popular stocks"""
+        return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "AMD", "INTC", 
+                "ADBE", "CSCO", "PYPL", "NFLX", "PEP", "KO", "DIS", "CMCSA", "T", "VZ", 
+                "WMT", "HD", "MCD", "SBUX", "NKE", "PG", "JNJ", "PFE", "UNH", "V", "MA"]
 
     def _fetch_time_series(self, symbol, interval="1day", outputsize=365):
         """Fetch time series data for a symbol"""
@@ -405,13 +443,30 @@ class StockScreener:
             logger.error("No TwelveData API key provided")
             return []
             
-        # Get symbols to screen with a very limited set to avoid rate limits 
-        symbols = self._get_sp500_symbols()
+        # First, try to get market movers which are likely to be trending stocks
+        market_movers = self._get_market_movers()
+        
+        # Then get some S&P 500 stocks as a backup
+        sp500_symbols = self._get_sp500_symbols()
+        
+        # Combine and prioritize market movers first, then S&P 500 stocks
+        combined_symbols = []
+        
+        # Add market movers first
+        for symbol in market_movers:
+            if symbol not in combined_symbols:
+                combined_symbols.append(symbol)
+                
+        # Then add S&P 500 stocks until we reach our maximum
+        for symbol in sp500_symbols:
+            if symbol not in combined_symbols:
+                combined_symbols.append(symbol)
+                
         # TwelveData free tier has a limit of ~610 credits per minute
-        # Each stock screening can use 50+ credits, so we limit to a very small number
-        max_symbols = min(10, len(symbols))  # Limit to max 10 symbols for free tier API
-        symbols = symbols[:max_symbols]
-        logger.debug(f"Got {len(symbols)} symbols for screening")
+        # Each stock screening can use 50+ credits, so we limit to a small number
+        max_symbols = min(10, len(combined_symbols))  # Limit to max 10 symbols for free tier API
+        symbols = combined_symbols[:max_symbols]
+        logger.debug(f"Got {len(symbols)} symbols for screening [{', '.join(symbols[:5])}...]")
         
         qualified_stocks = []
         processed_count = 0

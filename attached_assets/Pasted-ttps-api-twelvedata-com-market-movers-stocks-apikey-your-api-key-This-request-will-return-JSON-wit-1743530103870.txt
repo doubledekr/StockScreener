@@ -1,0 +1,97 @@
+ttps://api.twelvedata.com/market_movers/stocks?apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "values": [
+    {
+      "symbol": "BSET",
+      "name": "Bassett Furniture Industries Inc",
+      "exchange": "NASDAQ",
+      "mic_code": "XNAS",
+      "datetime": "2022-01-31 09:34:00",
+      "last": 17.25,
+      "high": 17.35,
+      "low": 15.90999,
+      "volume": 108297,
+      "change": 3.31,
+      "percent_change": 23.74462
+    },
+    {
+      "symbol": "TWKS",
+      "name": "Thoughtworks Holding, Inc.",
+      "exchange": "NASDAQ",
+      "mic_code": "XNAS",
+      "datetime": "2022-01-31 09:34:40",
+      "last": 20.09,
+      "high": 19.62999,
+      "low": 18.29999,
+      "volume": 392376,
+      "change": 3.98,
+      "percent_change": 20.84861
+    },
+    {
+      "symbol": "RMED",
+      "name": "RA Medical Systems Inc",
+      "exchange": "NYSE",
+      "mic_code": "XNAS",
+      "datetime": "2022-01-31 09:33:50",
+      "last": 0.984,
+      "high": 0.98519,
+      "low": 0.984,
+      "volume": 4480,
+      "change": 0.159,
+      "percent_change": 17.84511
+    }
+  ],
+  "status": "ok"
+}
+HTTP routes
+
+/market_movers/stocks
+/market_movers/etf
+/market_movers/mutual_funds
+/market_movers/forex
+/market_movers/crypto
+
+API credits
+
+100 per request
+
+API parameters
+
+Key	Type	Description
+direction	string	• Parameter is optional
+• Specifies direction of the snapshot gainers or losers
+• By default gainers
+outputsize	string	• Parameter is optional
+• Specifies the size of the snapshot
+• Can be in a range from 1 to 50; default 30
+country	string	• Parameter is optional
+• Country of the snapshot, applicable to non-currencies only
+• Takes country name or alpha code; default USA
+price_greater_than	string	Parameter is optional
+• Takes values with price grater than specified value
+apikey	string	• Required parameter
+• Your API key, which you can obtain for free here
+dp	string	• Parameter is optional
+• Specifies the number of decimal places for floating values
+• Should be in range [0,11] inclusive; default 5
+Response
+
+Key	Description
+symbol	the exchange symbol ticker
+name	the official name of the instrument
+exchange	exchange where instrument is traded
+mic_code	market identifier code (MIC) under ISO 10383 standard
+datetime	the last updated datetime timestamp
+last	the latest available price for the symbol today
+high	the highest price for the symbol today
+low	the lowest price for the symbol today
+volume	the trading volume of the symbol today
+change	the value of the change since the previous day
+percent_change	the percentage change since the previous day
+JSON request example
+
+https://api.twelvedata.com/market_movers/stocks?country=india&outputsize=20&apikey=demo
+
+https://api.twelvedata.com/market_movers/forex?direction=losers&apikey=demo
+
