@@ -18,14 +18,22 @@ class StockScreener:
     def _get_sp500_symbols(self):
         """Get list of S&P 500 symbols"""
         try:
-            # Using Wikipedia as a reliable source for S&P 500 constituents
-            tables = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-            sp500 = tables[0]
-            return sp500['Symbol'].str.replace('.', '-').tolist()
+            # Only attempt to get symbols from Wikipedia if lxml is available
+            try:
+                # Using Wikipedia as a reliable source for S&P 500 constituents
+                tables = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+                sp500 = tables[0]
+                return sp500['Symbol'].str.replace('.', '-').tolist()
+            except ImportError:
+                # If lxml is not available, fallback to the hardcoded list
+                logger.warning("lxml not available, falling back to hardcoded symbol list")
+                raise Exception("Using fallback list")
         except Exception as e:
-            logger.error(f"Error fetching S&P 500 symbols: {str(e)}")
-            # Fallback to a smaller list if the API fails
-            return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "JPM", "JNJ", "V"]
+            logger.warning(f"Using fallback symbol list: {str(e)}")
+            # Fallback to a smaller list of popular stocks
+            return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "AMD", "INTC", 
+                    "ADBE", "CSCO", "PYPL", "NFLX", "PEP", "KO", "DIS", "CMCSA", "T", "VZ", 
+                    "WMT", "HD", "MCD", "SBUX", "NKE", "PG", "JNJ", "PFE", "UNH", "V", "MA"]
 
     def _fetch_time_series(self, symbol, interval="1day", outputsize=365):
         """Fetch time series data for a symbol"""
@@ -335,20 +343,37 @@ class StockScreener:
 
     def get_top_stocks(self, limit=10):
         """Get the top stocks based on the screening criteria"""
+        # Safety check for API key
+        if not self.api_key:
+            logger.error("No TwelveData API key provided")
+            return []
+            
+        # Get symbols to screen with a limit to avoid excessive API calls 
         symbols = self._get_sp500_symbols()
+        max_symbols = min(100, len(symbols))  # Limit to max 100 symbols for performance
+        symbols = symbols[:max_symbols]
         logger.debug(f"Got {len(symbols)} symbols for screening")
         
         qualified_stocks = []
+        processed_count = 0
         
-        for symbol in symbols:
+        # Add delays between batches to avoid hitting API rate limits
+        for i, symbol in enumerate(symbols):
             try:
+                # Add a small delay every 5 requests to avoid hitting rate limits
+                if i > 0 and i % 5 == 0:
+                    time.sleep(1.0)
+                    
                 logger.debug(f"Screening stock: {symbol}")
                 technical_passed, technical_data = self._check_technical_criteria(symbol)
+                processed_count += 1
                 
                 # Skip stocks that don't meet technical criteria to save API calls
                 if not technical_passed:
                     continue
-                    
+                
+                # Add a small delay before fundamental data call
+                time.sleep(0.2)
                 fundamental_passed, fundamental_data = self._check_fundamental_criteria(symbol)
                 
                 # If both technical and fundamental criteria are met
@@ -375,13 +400,24 @@ class StockScreener:
                     
                     logger.debug(f"Stock {symbol} qualified with score {score}")
                     
-                    # If we have enough stocks, sort and keep only the top ones
-                    if len(qualified_stocks) >= limit * 2:
-                        qualified_stocks = sorted(qualified_stocks, key=lambda x: x["score"], reverse=True)[:limit]
+                    # If we have enough qualifying stocks, we can stop screening
+                    if len(qualified_stocks) >= limit:
+                        break
             except Exception as e:
                 logger.error(f"Error processing stock {symbol}: {str(e)}")
+                # Continue with the next stock
+                continue
+                
+            # Break if we've processed enough stocks or have enough qualified ones
+            if processed_count >= max_symbols or len(qualified_stocks) >= limit:
+                break
         
-        # Final sort and limit to top stocks
-        qualified_stocks = sorted(qualified_stocks, key=lambda x: x["score"], reverse=True)[:limit]
+        # Sort and limit to top stocks
+        if qualified_stocks:
+            qualified_stocks = sorted(qualified_stocks, key=lambda x: x.get("score", 0), reverse=True)[:limit]
         
+        # If we don't have enough qualified stocks, return what we have
+        if not qualified_stocks:
+            logger.warning("No stocks qualified for the screening criteria")
+            
         return qualified_stocks

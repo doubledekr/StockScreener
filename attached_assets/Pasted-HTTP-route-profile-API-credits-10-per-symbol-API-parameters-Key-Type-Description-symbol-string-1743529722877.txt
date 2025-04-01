@@ -1,0 +1,2863 @@
+HTTP route
+
+/profile
+
+API credits
+
+10 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+symbol	string	Ticker of the company
+name	string	Name of the company
+exchange	string	Exchange name where the company is listed
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+sector	string	Sector at which the company operates
+industry	string	Industry at which company operates
+employees	number	Number of employees in the company
+website	string	Website of the company
+description	string	Description of the company activities
+type	string	Issue type of the stock
+CEO	string	Name of the CEO of the company
+address	string	Street address of the company if presented
+address2	string	Secondary address of the company if presented
+city	string	City of the company if presented
+zip	string	ZIP code of the company if presented
+state	string	State of the company if presented
+country	string	Country of the company if presented
+phone	string	Phone number of the company if presented
+JSON request example
+
+https://api.twelvedata.com/profile?symbol=AAPL&apikey=demo
+
+Dividends
+Returns the amount of dividends paid out for the last 10+ years.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/dividends?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "dividends": [
+    {
+      "ex_date": "2021-08-06",
+      "amount": 0.22
+    }
+  ]
+}
+HTTP route
+
+/dividends
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+range	string	• Parameter is optional
+last - the last dividend - default
+1m - one month
+3m - three months
+6m - six months
+ytd - year-to-date
+1y - one year
+2y - two years
+5y - 5 years
+full - complete history
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+adjust	string	• Parameter is optional
+• Specifies if there should be an adjustment
+• Default true
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+ex_date	string	Stands for the ex date
+amount	number	Stands for the payment amount
+JSON request example
+
+https://api.twelvedata.com/dividends?symbol=AAPL&apikey=demo
+
+Dividends calendar
+This API method returns dividend data as a calendar for a given date range. To call custom period, use start_date and end_date parameters.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/dividends_calendar?apikey=your_api_key
+This request will return JSON with the following structure
+[
+    {
+        "symbol": "MSFT",
+        "mic_code": "XNGS",
+        "exchange": "NASDAQ",
+        "amount": 0.75,
+        "ex_date": "2024-02-14"
+    },
+    {
+        "symbol": "AAPL",
+        "mic_code": "XNGS",
+        "exchange": "NASDAQ",
+        "amount": 0.24,
+        "ex_date": "2024-02-09"
+    },
+    {
+        "symbol": "MSFT",
+        "mic_code": "XNGS",
+        "exchange": "NASDAQ",
+        "amount": 0.75,
+        "ex_date": "2023-11-15"
+    },
+    {
+        "symbol": "AAPL",
+        "mic_code": "XNGS",
+        "exchange": "NASDAQ",
+        "amount": 0.24,
+        "ex_date": "2023-11-10"
+    },
+]
+HTTP route
+
+/dividends_calendar
+
+API credits
+
+40 per symbol
+
+API parameters
+
+Key	Type	Description
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	number	• Parameter is optional
+• Number of data points to retrieve
+• Supports values in the range from 1 to 500
+• Default 100 when no date parameters are set, otherwise set to maximum
+page	string	• Parameter is optional
+• Page number; default 1
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+symbol	string	Ticker of the company
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+exchange	string	Exchange name where the company is listed
+ex_date	string	Stands for the ex date
+amount	number	Stands for the payment amount
+JSON request example
+
+https://api.twelvedata.com/dividends_calendar?apikey=your_api_key
+
+Splits
+Returns the date and the split factor of shares of the company for the last 10+ years.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/splits?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "splits": [
+    {
+      "date": "2020-08-31",
+      "description": "4-for-1 split",
+      "ratio": 0.25,
+      "from_factor": 4,
+      "to_factor": 1
+    }
+  ]
+}
+HTTP route
+
+/splits
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+range	string	• Parameter is optional
+last - the last split - default
+1m - one month
+3m - three months
+6m - six months
+ytd - year-to-date
+1y - one year
+2y - two years
+5y - 5 years
+full - complete history
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+date	string	Stands for the split date
+description	string	Specification of the split event
+ratio	number	The ratio by which the number of a company's outstanding shares of stock are increased following a stock split. For example, a 4-for-1 split results in four times as many outstanding shares, with each share selling at one forth of its pre-split price
+from_factor	number	To factor of the split
+to_factor	number	From factor of the split
+JSON request example
+
+https://api.twelvedata.com/splits?symbol=AAPL&apikey=demo
+
+Splits calendar
+This API method returns split data as a calendar for a given date range. To call custom period, use start_date and end_date parameters.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/splits_calendar?apikey=your_api_key
+This request will return JSON with the following structure
+[
+  {
+    "date": "2024-04-23",
+    "symbol": "AAPL",
+    "mic_code": "XNGS",
+    "exchange": "NASDAQ",
+    "description": "1-for-1 split",
+    "ratio": 1,
+    "from_factor": 1,
+    "to_factor": 1
+  },
+  {
+    "date": "2024-02-23",
+    "symbol": "LYT",
+    "mic_code": "XNCM",
+    "exchange": "NASDAQ",
+    "description": "1-for-60 split",
+    "ratio": 60,
+    "from_factor": 1,
+    "to_factor": 60
+  },
+  {
+    "date": "2024-02-21",
+    "symbol": "HAUS",
+    "mic_code": "BATS",
+    "exchange": "CBOE",
+    "description": "1-for-10 split",
+    "ratio": 10,
+    "from_factor": 1,
+    "to_factor": 10
+  },
+  {
+    "date": "2024-02-21",
+    "symbol": "TRBA",
+    "mic_code": "XSTU",
+    "exchange": "XSTU",
+    "description": "1-for-5 split",
+    "ratio": 5,
+    "from_factor": 1,
+    "to_factor": 5
+  }
+]
+HTTP route
+
+/splits_calendar
+
+API credits
+
+40 per symbol
+
+API parameters
+
+Key	Type	Description
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	number	• Parameter is optional
+• Number of data points to retrieve
+• Supports values in the range from 1 to 500
+• Default 100 when no date parameters are set, otherwise set to maximum
+page	string	• Parameter is optional
+• Page number; default 1
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+date	string	Stands for the split date
+symbol	string	Ticker of the company
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+exchange	string	Exchange name where the company is listed
+description	string	Specification of the split event
+ratio	number	The ratio by which the number of a company's outstanding shares of stock are increased following a stock split. For example, a 4-for-1 split results in four times as many outstanding shares, with each share selling at one forth of its pre-split price
+from_factor	number	To factor of the split
+to_factor	number	From factor of the split
+JSON request example
+
+https://api.twelvedata.com/splits_calendar?apikey=demo
+
+Earnings
+This API call returns earnings data for a given company, including EPS estimate and EPS actual. Earnings are available for complete company history.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/earnings?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "earnings":[
+    {
+       "date": "2020-04-30",
+       "time": "After Hours",
+       "eps_estimate": 2.09,
+       "eps_actual": 2.55,
+       "difference": 0.46,
+       "surprise_prc": 22.01
+    },
+    {
+       "date": "2020-01-28",
+       "time": "After Hours",
+       "eps_estimate": 4.54,
+       "eps_actual": 4.99,
+       "difference": 0.45,
+       "surprise_prc": 9.91
+    },
+    {
+       "date": "2019-10-30",
+       "time": "After Hours",
+       "eps_estimate": 2.84,
+       "eps_actual": 3.03,
+       "difference": 0.19,
+       "surprise_prc": 6.69
+    },
+    {
+       "date": "2010-07-30",
+       "time": "After Hours",
+       "eps_estimate": 2.10,
+       "eps_actual": 2.18,
+       "difference": 0.08,
+       "surprise_prc": 3.81
+    },
+    {
+       "date": "2019-04-30",
+       "time": "After Hours",
+       "eps_estimate": 2.37,
+       "eps_actual": 2.46,
+       "difference": 0.09,
+       "surprise_prc": 3.8
+    },
+    {...}
+  ],
+  "status":"ok"
+}
+HTTP route
+
+/earnings
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+type	string	• Parameter is optional
+• The asset class to which the instrument belongs
+• Supports American Depositary Receipt, Bond, Bond Fund, Closed-end Fund, Common Stock, Depositary Receipt, Digital Currency, ETF, Exchange-Traded Note, Global Depositary Receipt, Limited Partnership, Mutual Fund, Physical Currency, Preferred Stock, REIT, Right, Structured Product, Trust, Unit, and Warrant
+period	string	• Parameter is optional
+• Type of earning, returns only 1 record
+• When is not empty, dates and outputsize parameters are ignored
+• Accepts: latest and next
+outputsize	number	• Parameter is optional
+• Number of data points to retrieve
+• Supports values in the range from 1 to 1000
+• Default 10 when no date parameters are set, otherwise set to maximum
+format	string	• Parameter is optional
+• Value can be JSON or CSV
+• Default JSON
+delimiter	string	• Parameter is optional
+• Specify the delimiter used when downloading the CSV file
+• Default semicolon ;
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Advanced parameters
+Response
+
+Key	Description
+date	date of earning release
+time	can be either of the following values: Pre Market, After Hours, Time Not Supplied
+eps_estimate	analyst estimate of the future company earning
+eps_actual	actual value of reported earning
+difference	delta between eps_actual and eps_estimate
+surprise_prc	surprise in the percentage of the eps_actual related to eps_estimate
+JSON request example
+
+https://api.twelvedata.com/earnings?symbol=AAPL&apikey=demo
+
+Downloadable CSV example
+
+https://api.twelvedata.com/earnings?symbol=AAPL&apikey=demo&format=CSV
+
+Earnings Calendar
+This API method returns earning data as a calendar for a given date range. By default today’s earning is returned. To call custom period, use start_date and end_date parameters.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/earnings_calendar?apikey=your_api_key
+This request will return JSON with the following structure
+{
+    "earnings":{
+        "2020-05-08":[
+            {...},
+            {
+                "symbol": "BR",
+                "name": "Broadridge Financial Solutions Inc",
+                "currency": "USD",
+                "exchange": "NYSE",
+                "mic_code": "XNYS",
+                "country": "United States",
+                "time": "Time Not Supplied",
+                "eps_estimate": 1.72,
+                "eps_actual": 1.67,
+                "difference": -0.05,
+                "surprise_prc": -2.9
+            },
+            {
+                "symbol": "LPL",
+                "name": "LG Display Co Ltd",
+                "currency": "USD",
+                "exchange": "NYSE",
+                "mic_code": "XNYS",
+                "country": "United States",
+                "time": "Time Not Supplied",
+                "eps_estimate": -0.45,
+                "eps_actual": -0.23,
+                "difference": 0.22,
+                "surprise_prc": 48.22
+            },
+            {...}
+        ],
+        "2020-05-07":[
+            {...},
+            {
+                "symbol": "AAON",
+                "name": "AAON Inc",
+                "currency": "USD",
+                "exchange": "NASDAQ",
+                "mic_code": "XNAS",
+                "country": "United States",
+                "time": "Time Not Supplied",
+                "eps_estimate": 0.35,
+                "eps_actual": 0.41,
+                "difference": 0.06,
+                "surprise_prc": 17.14
+            },
+            {
+                "symbol": "JOBS",
+                "name": "51job Inc",
+                "currency": "USD",
+                "exchange": "NASDAQ",
+                "mic_code": "XNAS",
+                "country": "United States",
+                "time": "Time Not Supplied",
+                "eps_estimate": 2.44,
+                "eps_actual": 3.27,
+                "difference": 0.83,
+                "surprise_prc": 34.02
+            },
+            {...}
+        ],
+        {...}
+    },
+    "status":"ok"
+}
+HTTP route
+
+/earnings_calendar
+
+API credits
+
+40 per request
+
+API parameters
+
+Key	Type	Description
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+format	string	• Parameter is optional
+• Value can be JSON or CSV
+• Default JSON
+delimiter	string	• Parameter is optional
+• Specify the delimiter used when downloading the CSV file
+• Default semicolon ;
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Advanced parameters
+Response
+
+Key	Description
+symbol	instrument symbol (ticker)
+name	full name of instrument
+currency	currency in which instrument is traded by ISO 4217 standard
+exchange	exchange where instrument is traded
+mic_code	market identifier code (MIC) under ISO 10383 standard
+country	country where exchange is located
+time	can be either of the following values: Pre Market, After Hours, Time Not Supplied
+eps_estimate	analyst estimate of the future company earning
+eps_actual	actual value of reported earning
+difference	delta between eps_actual and eps_estimate
+surprise_prc	surprise in percentage of the eps_actual related to eps_estimate
+JSON request example
+
+https://api.twelvedata.com/earnings_calendar?apikey=demo
+
+Downloadable CSV example
+
+https://api.twelvedata.com/earnings_calendar?apikey=demo&format=CSV
+
+IPO Calendar
+This endpoint returns past, today, or upcoming IPOs.
+
+This API endpoint is available starting with the Grow plan.
+HTTP request example
+https://api.twelvedata.com/ipo_calendar?apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "2021-09-03": [
+    {
+      "symbol": "DWACU",
+      "name": "Digital World Acquisition Corp.",
+      "exchange": "NASDAQ",
+      "mic_code": "XNAS",
+      "price_range_low": 10,
+      "price_range_high": 10,
+      "offer_price": null,
+      "currency": "USD",
+      "shares": null
+    },
+    {
+      "symbol": "9869",
+      "name": "Helens Intl Hldg Co Ltd",
+      "exchange": "HKEX",
+      "mic_code": "XHKG",
+      "price_range_low": null,
+      "price_range_high": null,
+      "offer_price": null,
+      "currency": "HKD",
+      "shares": null
+    },
+    {
+      "symbol": "BMR",
+      "name": "Ballymore Resources Ltd",
+      "exchange": "ASX",
+      "mic_code": "XASX",
+      "price_range_low": 0.1548,
+      "price_range_high": 0.1548,
+      "offer_price": 0.2,
+      "currency": "AUD",
+      "shares": null
+    }
+  ]
+}
+HTTP route
+
+/ipo_calendar
+
+API credits
+
+40 per request
+
+API parameters
+
+Key	Type	Description
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+apikey	string	• Required parameter
+• Your API key upgraded to the Grow plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+symbol	string	Ticker of the company
+name	string	Name of the company
+exchange	string	Exchange name where the company is listed
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+price_range_low	number	The lower bound of stock price range if available
+price_range_high	number	The upper bound of stock price range if available
+offer_price	number	Initial offer price if available
+currency	string	Currency of the stock
+shares	number	Number of shares, if available
+JSON request example
+
+https://api.twelvedata.com/ipo_calendar?apikey=your_api_key
+
+StatisticsHigh Demand
+Returns current overview of company’s main statistics including valuation metrics and financials.
+
+This API endpoint is available starting with the Pro plan.
+HTTP request example
+https://api.twelvedata.com/statistics?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "statistics": {
+    "valuations_metrics": {
+      "market_capitalization": 2546807865344,
+      "enterprise_value": 2620597731328,
+      "trailing_pe": 30.162493,
+      "forward_pe": 26.982489,
+      "peg_ratio": 1.4,
+      "price_to_sales_ttm": 7.336227,
+      "price_to_book_mrq": 39.68831,
+      "enterprise_to_revenue": 7.549,
+      "enterprise_to_ebitda": 23.623
+    },
+    "financials": {
+      "fiscal_year_ends": "2020-09-26",
+      "most_recent_quarter": "2021-06-26",
+      "gross_margin": 46.57807
+      "profit_margin": 0.25004,
+      "operating_margin": 0.28788,
+      "return_on_assets_ttm": 0.19302,
+      "return_on_equity_ttm": 1.27125,
+      "income_statement": {
+        "revenue_ttm": 347155005440,
+        "revenue_per_share_ttm": 20.61,
+        "quarterly_revenue_growth": 0.364,
+        "gross_profit_ttm": 104956000000,
+        "ebitda": 110934999040,
+        "net_income_to_common_ttm": 86801997824,
+        "diluted_eps_ttm": 5.108,
+        "quarterly_earnings_growth_yoy": 0.932
+      },
+      "balance_sheet": {
+        "revenue_ttm": 347155005440,
+        "total_cash_mrq": 61696000000,
+        "total_cash_per_share_mrq": 3.732,
+        "total_debt_mrq": 135491002368,
+        "total_debt_to_equity_mrq": 210.782,
+        "current_ratio_mrq": 1.062,
+        "book_value_per_share_mrq": 3.882
+      },
+      "cash_flow": {
+        "operating_cash_flow_ttm": 104414003200,
+        "levered_free_cash_flow_ttm": 80625876992
+      }
+    },
+    "stock_statistics": {
+      "shares_outstanding": 16530199552,
+      "float_shares": 16513305231,
+      "avg_10_volume": 72804757,
+      "avg_90_volume": 77013078,
+      "shares_short": 93105968,
+      "short_ratio": 1.19,
+      "short_percent_of_shares_outstanding": 0.0056,
+      "percent_held_by_insiders": 0.00071000005,
+      "percent_held_by_institutions": 0.58474
+    },
+    "stock_price_summary": {
+      "fifty_two_week_low": 103.1,
+      "fifty_two_week_high": 157.26,
+      "fifty_two_week_change": 0.375625,
+      "beta": 1.201965,
+      "day_50_ma": 148.96686,
+      "day_200_ma": 134.42506
+    },
+    "dividends_and_splits": {
+      "forward_annual_dividend_rate": 0.88,
+      "forward_annual_dividend_yield": 0.0057,
+      "trailing_annual_dividend_rate": 0.835,
+      "trailing_annual_dividend_yield": 0.0053832764,
+      "5_year_average_dividend_yield": 1.27,
+      "payout_ratio": 0.16309999,
+      "dividend_frequency": "Quarterly",
+      "dividend_date": "2021-08-12",
+      "ex_dividend_date": "2021-08-06",
+      "last_split_factor": "4-for-1 split",
+      "last_split_date": "2020-08-31"
+    }
+  }
+}
+HTTP route
+
+/statistics
+
+API credits
+
+50 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+name	string	Name of the company
+market_capitalization	number	Refers to the market value of the company's outstanding shares
+enterprise_value	number	Refers to enterprise value (EV) of the company, often used as a more comprehensive alternative to market capitalization
+trailing_pe	number	Refers to the trailing price-to-earnings (P/E). It is calculated by taking the current stock price and dividing it by the trailing earnings per share (EPS) for the past 12 months
+forward_pe	number	Refers to the forward price-to-earnings ratio. It is calculated by dividing the current share price by the estimated future earnings per share
+peg_ratio	number	The price/earnings to growth (PEG) ratio is a price-to-earnings ratio divided by the growth rate of the earnings
+price_to_sales_ttm	number	The price-to-sales (P/S) ratio is a valuation ratio that compares the market capitalization to its revenues over the last 12 months
+price_to_book_mrq	number	The price-to-book (P/B) ratio is equal to the current share price divided by the book value of all shares (BVPS) over the last quarter
+enterprise_to_revenue	number	The enterprise value-to-revenue multiple (EV/R) is a measure that compares enterprise value to revenue
+enterprise_to_ebitda	number	The enterprise value-to-ebitda multiple (EV/EBITDA) is a measure that compares enterprise value to EBITDA
+fiscal_year_ends	string	Refers to the completion of the last 12-month accounting period
+most_recent_quarter	string	The most recent quarter (MRQ) refers to the fiscal quarter that most recently ended
+gross_margin	number	The portion of a company's revenue left over after direct costs are subtracted
+profit_margin	number	Refers to gross profit margin. Calculated by dividing net income by sales revenue
+operating_margin	number	Operating margin is calculated by dividing operating income by net sales
+return_on_assets_ttm	number	Return on assets (ROA) is calculated by dividing net income by total assets
+return_on_equity_ttm	number	Return on equity (ROE) is calculated by dividing net income by average shareholders' equity
+revenue_ttm	number	Refers to total revenue over the last 12 months
+revenue_per_share_ttm	number	Refers to revenue per share over the last 12 months
+quarterly_revenue_growth	number	Refers to quarterly revenue growth year over year
+gross_profit_ttm	number	Refers to gross profit over the last 12 months
+ebitda	number	Refers to EBITDA (earnings before interest, taxes, depreciation, and amortization) measure; EBITDA is not calculated for banks.
+net_income_to_common_ttm	number	Refers to net income applicable to common shares over the last 12 months
+diluted_eps_ttm	number	Refers to diluted EPS measure over the last 12 months
+quarterly_earnings_growth_yoy	number	Refers to quarterly earnings growth year over year
+total_cash_mrq	number	Refers to total cash measure for the most recent quarter
+total_cash_per_share_mrq	number	Refers to total cash per share measure for the most recent quarter
+total_debt_mrq	number	Refers to total debt measure for the most recent quarter
+total_debt_to_equity_mrq	number	Refers to total debt to equity measure for the most recent quarter
+current_ratio_mrq	number	Refers to current ratio (total assets / total liabilities) ratio for the most recent quarter
+book_value_per_share_mrq	number	Refers to book value per share (BVPS) ratio for the most recent quarter
+operating_cash_flow_ttm	number	Refers to operating cash flow measure over the last 12 months
+levered_free_cash_flow_ttm	number	Refers to levered free cash flow measure over the last 12 months
+shares_outstanding	number	Refers for the shares outstanding currently held by all its shareholders
+float_shares	number	Refers to floating stock is the number of public shares a company has available for trading on the open market
+avg_10_volume	number	Refers to the average 10 days volume
+avg_90_volume	number	Refers to the average 90 days volume
+shares_short	number	Refers to the number of shares that have been shorted
+short_ratio	number	Refers to short ratio measure
+short_percent_of_shares_outstanding	number	Refers to the number of shorted shares divided by the number of shares outstanding
+percent_held_by_insiders	number	Refers to the percentage of shares held by the company insiders
+percent_held_by_institutions	number	Refers to the percentage of shares held by the institutions
+fifty_two_week_low	number	Refers to the lowest price at which stock traded during a year
+fifty_two_week_high	number	Refers to the highest price at which stock traded during a year
+fifty_two_week_change	number	Refers to the change between lowest and highest prices during a year
+beta	number	Refers to beta measure relative to the primary benchmark (index) of the country
+day_50_ma	number	Refers to the 50-day simple moving average
+day_200_ma	number	Refers to the 200-day simple moving average
+forward_annual_dividend_rate	number	Refers to the forward dividend yield estimation in the currency of instrument
+forward_annual_dividend_yield	number	Refers to the forward dividend yield percentage relative to stock price
+trailing_annual_dividend_rate	number	Refers to the trailing dividend yield rate in the currency of instrument over the last 12 months
+trailing_annual_dividend_yield	number	Refers to the trailing dividend yield percentage relative to stock price
+5_year_average_dividend_yield	number	Refers to the average 5 years dividend yield
+payout_ratio	number	Refers to payout ratio, showing the proportion of earnings a company pays its shareholders in the form of dividends
+dividend_frequency	string	Refers to how often a stock or fund pays dividends
+dividend_date	number	Refers to the last dividend payout date
+ex_dividend_date	number	Refers to the last ex-dividend payout date
+last_split_factor	number	Specification of the last split event
+last_split_date	number	Refers for the last split date
+JSON request example
+
+https://api.twelvedata.com/statistics?symbol=AAPL&apikey=demo
+
+Income StatementHigh Demand
+Returns complete income statement of a company and shows the company’s revenues and expenses during a period (annual or quarter).
+
+This API endpoint is available starting with the Pro plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/income_statement?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York",
+    "period": "Quarterly"
+  },
+  "income_statement": [
+    {
+      "fiscal_date": "2021-12-31",
+      "quarter": 1,
+      "year": 2022,
+      "sales": 123945000000,
+      "cost_of_goods": 69702000000,
+      "gross_profit": 54243000000,
+      "operating_expense": {
+        "research_and_development": 6306000000,
+        "selling_general_and_administrative": 6449000000,
+        "other_operating_expenses": null
+      },
+      "operating_income": 41488000000,
+      "non_operating_interest": {
+        "income": 650000000,
+        "expense": 694000000
+      },
+      "other_income_expense": -203000000,
+      "pretax_income": 41241000000,
+      "income_tax": 6611000000,
+      "net_income": 34630000000,
+      "eps_basic": 2.11,
+      "eps_diluted": 2.1,
+      "basic_shares_outstanding": 16391724000,
+      "diluted_shares_outstanding": 16391724000,
+      "ebitda": 44632000000,
+      "net_income_continuous_operations": null,
+      "minority_interests": null,
+      "preferred_stock_dividends": null
+    }
+  ]
+}
+HTTP route
+
+/income_statement
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+fiscal_date	string	Date of the income statement release
+quarter	number	Fiscal quarter. Visible when &period=quarterly
+year	number	Fiscal year. Visible when &period=quarterly
+sales	number	Refers to total reported revenue
+cost_of_goods	number	Refers to cost of revenue
+gross_profit	number	Refers to net gross profit: sales - cost_of_goods
+research_and_development	number	Refers to research & development (R&D) expenses
+selling_general_and_administrative	number	Refers to selling, general and administrative (SG&A) expenses
+other_operating_expenses	number	Refers to other operating expenses
+operating_income	number	Refers to net operating income: gross_profit - research_and_development - selling_general_and_administrative
+income	number	Refers to non-operating interest income
+expense	number	Refers to non-operating interest expense
+other_income_expense	number	Refers to other incomes or expenses
+pretax_income	number	Refers to earnings before tax: operating_income + net_non_operating_interest - other_income_expense
+income_tax	number	Refers to a tax provision
+net_income	number	Refers to net income: pretax_income - income_tax
+eps_basic	number	Refers to earnings per share (EPS)
+eps_diluted	number	Refers to diluted earnings per share (EPS)
+basic_shares_outstanding	number	Refers for the shares outstanding held by all its shareholders
+diluted_shares_outstanding	number	Refers to the total number of shares a company would have if all dilutive securities were exercised and converted into shares
+ebitda	number	Refers to EBITDA (earnings before interest, taxes, depreciation, and amortization) measure
+net_income_continuous_operations	number	Refers to the after-tax earnings that a business has generated from its operational activities
+minority_interests	number	Refers to amount of minority interests paid out
+preferred_stock_dividends	number	Refers to dividend that is allocated to and paid on a company's preferred shares
+JSON request example
+
+https://api.twelvedata.com/income_statement?symbol=AAPL&apikey=demo
+
+Income Statement Consolidated
+Returns consolidated income statement of a company and expenses during a period (annual or quarter).
+
+This API endpoint is available starting with the Ultra plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/income_statement/consolidated?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "income_statement": [
+    {
+      "fiscal_date": "2023-09-30",
+      "revenue": {
+        "total_revenue": 383285000000,
+        "operating_revenue": 383285000000
+      },
+      "gross_profit": {
+        "gross_profit_value": 169148000000,
+        "cost_of_revenue": {
+          "cost_of_revenue_value": 214137000000,
+          "excise_taxes": 214137000000,
+          "reconciled_cost_of_revenue": 214137000000
+        }
+      },
+      "operating_income": {
+        "operating_income_value": 114301000000,
+        "total_operating_income_as_reported": 114301000000,
+        "operating_expense": 54847000000,
+        "other_operating_expenses": 114301000000,
+        "total_expenses": 268984000000
+      },
+      "net_income": {
+        "net_income_value": 96995000000,
+        "net_income_common_stockholders": 96995000000,
+        "net_income_including_noncontrolling_interests": 96995000000,
+        "net_income_from_tax_loss_carryforward": 96995000000,
+        "net_income_extraordinary": 96995000000,
+        "net_income_discontinuous_operations": 96995000000,
+        "net_income_continuous_operations": 96995000000,
+        "net_income_from_continuing_operation_net_minority_interest": 96995000000,
+        "net_income_from_continuing_and_discontinued_operation": 96995000000,
+        "normalized_income": 96995000000,
+        "minority_interests": 96995000000
+      },
+      "earnings_per_share": {
+        "diluted_eps": 6.13,
+        "basic_eps": 6.16,
+        "continuing_and_discontinued_diluted_eps": 6.16,
+        "continuing_and_discontinued_basic_eps": 6.16,
+        "normalized_diluted_eps": 6.16,
+        "normalized_basic_eps": 6.16,
+        "reported_normalized_diluted_eps": 6.16,
+        "reported_normalized_basic_eps": 6.16,
+        "diluted_eps_other_gains_losses": 6.16,
+        "tax_loss_carryforward_diluted_eps": 6.16,
+        "diluted_accounting_change": 6.16,
+        "diluted_extraordinary": 6.16,
+        "diluted_discontinuous_operations": 6.16,
+        "diluted_continuous_operations": 6.16,
+        "basic_eps_other_gains_losses": 6.16,
+        "tax_loss_carryforward_basic_eps": 6.16,
+        "basic_accounting_change": 6.16,
+        "basic_extraordinary": 6.16,
+        "basic_discontinuous_operations": 6.16,
+        "basic_continuous_operations": 6.16,
+        "diluted_ni_avail_to_common_stockholders": 96995000000,
+        "average_dilution_earnings": 96995000000
+      },
+      "expenses": {
+        "total_expenses": 268984000000,
+        "selling_general_and_administration_expense": 24932000000,
+        "selling_and_marketing_expense": 24932000000,
+        "general_and_administrative_expense": 24932000000,
+        "other_general_and_administrative_expense": 24932000000,
+        "depreciation_amortization_depletion_income_statement": 29915000000,
+        "research_and_development_expense": 29915000000,
+        "insurance_and_claims_expense": 29915000000,
+        "rent_and_landing_fees": 29915000000,
+        "salaries_and_wages_expense": 29915000000,
+        "rent_expense_supplemental": 29915000000,
+        "provision_for_doubtful_accounts": 29915000000
+      },
+      "interest_income_and_expense": {
+        "interest_income": 3750000000,
+        "interest_expense": 3933000000,
+        "net_interest_income": -183000000,
+        "net_non_operating_interest_income_expense": -183000000,
+        "interest_expense_non_operating": 3933000000,
+        "interest_income_non_operating": 3750000000
+      },
+      "other_income_and_expenses": {
+        "other_income_expense": -382000000,
+        "other_non_operating_income_expenses": -382000000,
+        "special_income_charges": 382000000,
+        "gain_on_sale_of_ppe": 382000000,
+        "gain_on_sale_of_business": 382000000,
+        "gain_on_sale_of_security": 382000000,
+        "other_special_charges": 382000000,
+        "write_off": 382000000,
+        "impairment_of_capital_assets": 382000000,
+        "restructuring_and_merger_acquisition": 382000000,
+        "securities_amortization": 382000000,
+        "earnings_from_equity_interest": 382000000,
+        "earnings_from_equity_interest_net_of_tax": 382000000,
+        "total_other_finance_cost": 382000000
+      },
+      "taxes": {
+        "tax_provision": 16741000000,
+        "tax_effect_of_unusual_items": 0,
+        "tax_rate_for_calculations": 0.147,
+        "other_taxes": 0
+      },
+      "depreciation_and_amortization": {
+        "depreciation_amortization_depletion": 129188000000,
+        "amortization_of_intangibles": 129188000000,
+        "depreciation": 129188000000,
+        "amortization": 129188000000,
+        "depletion": 129188000000,
+        "depreciation_and_amortization_in_income_statement": 129188000000
+      },
+      "ebitda": {
+        "ebitda_value": 129188000000,
+        "normalized_ebitda_value": 129188000000,
+        "ebit_value": 117669000000
+      },
+      "dividends_and_shares": {
+        "dividend_per_share": 15812547000,
+        "diluted_average_shares": 15812547000,
+        "basic_average_shares": 15744231000,
+        "preferred_stock_dividends": 15744231000,
+        "other_under_preferred_stock_dividend": 15744231000
+      },
+      "unusual_items": {
+        "total_unusual_items": 11519000000,
+        "total_unusual_items_excluding_goodwill": 11519000000
+      },
+      "depreciation": {
+        "reconciled_depreciation": 11519000000
+      },
+      "pretax_income": {
+        "pretax_income_value": 113736000000
+      },
+      "special_income_charges": {
+        "special_income_charges_value": 113736000000
+      }
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/income_statement/consolidated
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Click to expand
+JSON request example
+
+https://api.twelvedata.com/income_statement/consolidated?symbol=AAPL&apikey=demo
+
+Balance SheetHigh Demand
+Returns complete balance sheet of a company showing the summary of assets, liabilities, and shareholders’ equity.
+
+This API endpoint is available starting with the Pro plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/balance_sheet?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York",
+    "period": "Quarterly"
+  },
+  "balance_sheet": [
+    {
+      "fiscal_date": "2021-09-30",
+      "assets": {
+        "current_assets": {
+          "cash": 17305000000,
+          "cash_equivalents": 17635000000,
+          "cash_and_cash_equivalents": 34940000000,
+          "other_short_term_investments": 27699000000,
+          "accounts_receivable": 26278000000,
+          "other_receivables": 25228000000,
+          "inventory": 6580000000,
+          "prepaid_assets": null,
+          "restricted_cash": null,
+          "assets_held_for_sale": null,
+          "hedging_assets": null,
+          "other_current_assets": 14111000000,
+          "total_current_assets": 134836000000
+        },
+        "non_current_assets": {
+          "properties": 0,
+          "land_and_improvements": 20041000000,
+          "machinery_furniture_equipment": 78659000000,
+          "construction_in_progress": null,
+          "leases": 11023000000,
+          "accumulated_depreciation": -70283000000,
+          "goodwill": null,
+          "investment_properties": null,
+          "financial_assets": null,
+          "intangible_assets": null,
+          "investments_and_advances": 127877000000,
+          "other_non_current_assets": 48849000000,
+          "total_non_current_assets": 216166000000
+        },
+        "total_assets": 351002000000
+      },
+      "liabilities": {
+        "current_liabilities": {
+          "accounts_payable": 54763000000,
+          "accrued_expenses": null,
+          "short_term_debt": 15613000000,
+          "deferred_revenue": 7612000000,
+          "tax_payable": null,
+          "pensions": null,
+          "other_current_liabilities": 47493000000,
+          "total_current_liabilities": 125481000000
+        },
+        "non_current_liabilities": {
+          "long_term_provisions": null,
+          "long_term_debt": 109106000000,
+          "provision_for_risks_and_charges": 24689000000,
+          "deferred_liabilities": null,
+          "derivative_product_liabilities": null,
+          "other_non_current_liabilities": 28636000000,
+          "total_non_current_liabilities": 162431000000
+        },
+        "total_liabilities": 287912000000
+      },
+      "shareholders_equity": {
+        "common_stock": 57365000000,
+        "retained_earnings": 5562000000,
+        "other_shareholders_equity": 163000000,
+        "total_shareholders_equity": 63090000000,
+        "additional_paid_in_capital": null,
+        "treasury_stock": null,
+        "minority_interest": null
+      }
+    }
+  ]
+}
+HTTP route
+
+/balance_sheet
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+fiscal_date	string	Date of the balance sheet release
+quarter	string	Fiscal quarter. Visible when &period=quarterly
+cash	number	Cash includes currency, bank accounts, and undeposited checks
+cash_equivalents	number	Represents cash equivalents that have high credit quality and are highly liquid
+cash_and_cash_equivalents	number	Combined value of cash and cash equivalents when company doesn't report a breakdown
+other_short_term_investments	number	Represents other short term investments
+accounts_receivable	number	Represents the balance of money due to a firm for goods or services delivered or used but not yet paid for by customers
+other_receivables	number	Represents other receivables
+inventory	number	Represents the goods available for sale and raw materials used to produce goods available for sale
+prepaid_assets	number	Represents expense that has already been paid for, but which has not yet been consumed
+restricted_cash	number	Represents money that is held for a specific purpose and thus not available to the company for immediate or general business use
+assets_held_for_sale	number	Represents assets which company plans to sell
+hedging_assets	number	Represents money that is spent on hedging assets
+other_current_assets	number	Represents other current assets
+total_current_assets	number	All current assets values in a total
+properties	number	Represents property owned
+land_and_improvements	number	Represents land and improvements owned
+machinery_furniture_equipment	number	Represents office equipment, furniture, and vehicles owned
+construction_in_progress	number	Represents the cost of construction work, which is not yet completed
+leases	number	Represents operating and financial leases
+accumulated_depreciation	number	Represents the cumulative depreciation of an asset that has been recorded
+goodwill	number	Represents the value of a brand name, solid customer base, good customer relations, good employee relations, and proprietary technology
+investment_properties	number	Represents real estate property purchased with the intention of earning a return on the investment
+financial_assets	number	Represents liquid asset that gets its value from a contractual right or ownership claim
+intangible_assets	number	Represents the patents, trademarks, and other intellectual properties
+investments_and_advances	number	Represents available for sale financial securities
+other_non_current_assets	number	Represents other long-term assets
+total_non_current_assets	number	All long-term assets values in total
+total_assets	number	The sum of total_current_assets + total_non_current_assets
+accounts_payable	number	Refers to an account within the general ledger that represents an obligation to pay off a short-term debt to creditors or suppliers
+accrued_expenses	number	Represents payments that a company is obligated to pay in the future for which goods and services have already been delivered
+short_term_debt	number	Represents current debt and capital lease obligations
+deferred_revenue	number	Represents advance payments a company receives for products or services that are to be delivered or performed in the future
+tax_payable	number	Represents taxes due to the government within one year
+pensions	number	Represents to pensions to be paid out
+other_current_liabilities	number	Represents other current liabilities
+total_current_liabilities	number	Represents total current assets
+long_term_provisions	number	Represents money set aside for employee benefits such as gratuity
+long_term_debt	number	Represents amount of outstanding debt that has a maturity of 12 months or longer
+provision_for_risks_and_charges	number	Represents funds set aside as assets to pay for anticipated future losses
+deferred_liabilities	number	Represents revenue producing activity for which revenue has not yet been recognized, and is not expected to be recognized in the next 12 months
+derivative_product_liabilities	number	
+other_non_current_liabilities	number	Represents other non-current liabilities
+total_non_current_liabilities	number	Represents total non-current liabilities
+total_liabilities	number	The sum of total_current_liabilities + total_non_current_liabilities
+common_stock	number	Represents net worth of investors shares, which is equal to the total_assets - total_liabilities
+retained_earnings	number	Refers to the profits earned minus dividends paid
+other_shareholders_equity	number	Represents other not affecting retained earnings gains and looses
+total_shareholders_equity	number	Represents the net worth of a company, which is the amount that would be returned to shareholders if a company's total assets were liquidated, and all of its debts were repaid
+JSON request example
+
+https://api.twelvedata.com/balance_sheet?symbol=AAPL&apikey=demo
+
+Balance Sheet consolidated
+Returns consolidated balance sheet of a company showing the summary of assets, liabilities, and shareholders.
+
+This API endpoint is available starting with the Ultra plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/balance_sheet/consolidated?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "balance_sheet": [
+    {
+      "fiscal_date": "2023-09-30",
+      "assets": {
+        "total_assets": 352583000000,
+        "current_assets": {
+          "total_current_assets": 143566000000,
+          "cash_cash_equivalents_and_short_term_investments": 61555000000,
+          "cash_and_cash_equivalents": 29965000000,
+          "cash_equivalents": 1606000000,
+          "cash_financial": 28359000000,
+          "other_short_term_investments": 31590000000,
+          "restricted_cash": 31590000000,
+          "receivables": {
+            "total_receivables": 60985000000,
+            "accounts_receivable": 29508000000,
+            "gross_accounts_receivable": 29508000000,
+            "allowance_for_doubtful_accounts_receivable": 29508000000,
+            "receivables_adjustments_allowances": 29508000000,
+            "other_receivables": 31477000000,
+            "due_from_related_parties_current": 31477000000,
+            "taxes_receivable": 31477000000,
+            "accrued_interest_receivable": 31477000000,
+            "notes_receivable": 31477000000,
+            "loans_receivable": 31477000000
+          },
+          "inventory": {
+            "total_inventory": 6331000000,
+            "inventories_adjustments_allowances": 6331000000,
+            "other_inventories": 6331000000,
+            "finished_goods": 6331000000,
+            "work_in_process": 6331000000,
+            "raw_materials": 6331000000
+          },
+          "prepaid_assets": 14695000000,
+          "current_deferred_assets": 14695000000,
+          "current_deferred_taxes_assets": 14695000000,
+          "assets_held_for_sale_current": 14695000000,
+          "hedging_assets_current": 14695000000,
+          "other_current_assets": 14695000000
+        },
+        "non_current_assets": {
+          "total_non_current_assets": 209017000000,
+          "financial_assets": 209017000000,
+          "investments_and_advances": 100544000000,
+          "other_investments": 100544000000,
+          "investment_in_financial_assets": 100544000000,
+          "held_to_maturity_securities": 100544000000,
+          "available_for_sale_securities": 100544000000,
+          "financial_assets_designated_as_fair_value_through_profit_or_loss_total": 100544000000,
+          "trading_securities": 100544000000,
+          "long_term_equity_investment": 100544000000,
+          "investments_in_joint_ventures_at_cost": 100544000000,
+          "investments_in_other_ventures_under_equity_method": 100544000000,
+          "investments_in_associates_at_cost": 100544000000,
+          "investments_in_subsidiaries_at_cost": 100544000000,
+          "investment_properties": 100544000000,
+          "goodwill_and_other_intangible_assets": {
+            "goodwill": 100544000000,
+            "other_intangible_assets": 100544000000,
+            "total_goodwill_and_intangible_assets": 100544000000
+          },
+          "net_ppe": 54376000000,
+          "gross_ppe": 125260000000,
+          "accumulated_depreciation": -70884000000,
+          "leases": 12839000000,
+          "construction_in_progress": 12839000000,
+          "other_properties": 10661000000,
+          "machinery_furniture_equipment": 78314000000,
+          "buildings_and_improvements": 12839000000,
+          "land_and_improvements": 23446000000,
+          "properties": 0,
+          "non_current_accounts_receivable": 12839000000,
+          "non_current_note_receivables": 12839000000,
+          "due_from_related_parties_non_current": 12839000000,
+          "non_current_prepaid_assets": 12839000000,
+          "non_current_deferred_assets": 17852000000,
+          "non_current_deferred_taxes_assets": 17852000000,
+          "defined_pension_benefit": 12839000000,
+          "other_non_current_assets": 36245000000
+        },
+        "liabilities": {
+          "total_liabilities_net_minority_interest": 290437000000,
+          "current_liabilities": {
+            "total_current_liabilities": 145308000000,
+            "current_debt_and_capital_lease_obligation": 17382000000,
+            "current_debt": 15807000000,
+            "current_capital_lease_obligation": 1575000000,
+            "other_current_borrowings": 9822000000,
+            "line_of_credit": 9822000000,
+            "commercial_paper": 5985000000,
+            "current_notes_payable": 9822000000,
+            "current_provisions": 9822000000,
+            "payables_and_accrued_expenses": {
+              "total_payables_and_accrued_expenses": 71430000000,
+              "accounts_payable": 62611000000,
+              "current_accrued_expenses": 9822000000,
+              "interest_payable": 9822000000,
+              "payables": 71430000000,
+              "other_payable": 9822000000,
+              "due_to_related_parties_current": 9822000000,
+              "dividends_payable": 9822000000,
+              "total_tax_payable": 8819000000,
+              "income_tax_payable": 8819000000
+            },
+            "pension_and_other_post_retirement_benefit_plans_current": 8061000000,
+            "employee_benefits": 8061000000,
+            "current_deferred_liabilities": 8061000000,
+            "current_deferred_revenue": 8061000000,
+            "current_deferred_taxes_liabilities": 8061000000,
+            "other_current_liabilities": 48435000000,
+            "liabilities_held_for_sale_non_current": 48435000000
+          },
+          "non_current_liabilities": {
+            "total_non_current_liabilities_net_minority_interest": 145129000000,
+            "long_term_debt_and_capital_lease_obligation": {
+              "total_long_term_debt_and_capital_lease_obligation": 106548000000,
+              "long_term_debt": 95281000000,
+              "long_term_capital_lease_obligation": 11267000000
+            },
+            "long_term_provisions": 15457000000,
+            "non_current_pension_and_other_postretirement_benefit_plans": 15457000000,
+            "non_current_accrued_expenses": 15457000000,
+            "due_to_related_parties_non_current": 15457000000,
+            "trade_and_other_payables_non_current": 15457000000,
+            "trade_and_other_payables_non_current": 15457000000,
+            "non_current_deferred_liabilities": 15457000000,
+            "non_current_deferred_revenue": 15457000000,
+            "non_current_deferred_taxes_liabilities": 15457000000,
+            "other_non_current_liabilities": 23124000000,
+            "preferred_securities_outside_stock_equity": 15457000000,
+            "derivative_product_liabilities": 15457000000,
+            "capital_lease_obligations": 12842000000,
+            "restricted_common_stock": 12842000000
+          },
+          "equity": {
+            "total_equity_gross_minority_interest": 62146000000,
+            "stockholders_equity": 62146000000,
+            "common_stock_equity": 62146000000,
+            "preferred_stock_equity": 62146000000,
+            "other_equity_interest": 62146000000,
+            "minority_interest": 62146000000,
+            "total_capitalization": 157427000000,
+            "net_tangible_assets": 62146000000,
+            "tangible_book_value": 62146000000,
+            "invested_capital": 173234000000,
+            "working_capital": -1742000000,
+            "capital_stock": {
+              "common_stock": 73812000000,
+              "preferred_stock": 73812000000,
+              "total_partnership_capital": 73812000000,
+              "general_partnership_capital": 73812000000,
+              "limited_partnership_capital": 73812000000,
+              "capital_stock": 73812000000,
+              "other_capital_stock": 73812000000,
+              "additional_paid_in_capital": 73812000000,
+              "retained_earnings": -214000000,
+              "treasury_stock": 73812000000,
+              "treasury_shares_number": 0,
+              "ordinary_shares_number": 15550061000,
+              "preferred_shares_number": 73812000000,
+              "share_issued": 15550061000
+            },
+            "equity_adjustments": {
+              "gains_losses_not_affecting_retained_earnings": -11452000000,
+              "other_equity_adjustments": -11452000000,
+              "fixed_assets_revaluation_reserve": 11452000000,
+              "foreign_currency_translation_adjustments": 11452000000,
+              "minimum_pension_liabilities": 11452000000,
+              "unrealized_gain_loss": 11452000000
+            },
+            "net_debt": 81123000000,
+            "total_debt": 123930000000
+          }
+        }
+      }
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/balance_sheet/consolidated
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Click to expand
+JSON request example
+
+https://api.twelvedata.com/balance_sheet/consolidated?symbol=AAPL&apikey=demo
+
+Cash FlowHigh Demand
+Returns complete cash flow of a company showing the net amount of cash and cash equivalents being transferred into and out of business.
+
+This API endpoint is available starting with the Pro plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/cash_flow?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York",
+    "period": "Quarterly"
+  },
+  "cash_flow": [
+    {
+      "fiscal_date": "2021-12-31",
+      "quarter": 1,
+      "operating_activities": {
+        "net_income": 34630000000,
+        "depreciation": 2697000000,
+        "deferred_taxes": 682000000,
+        "stock_based_compensation": 2265000000,
+        "other_non_cash_items": 167000000,
+        "accounts_receivable": -13746000000,
+        "accounts_payable": 19813000000,
+        "other_assets_liabilities": 458000000,
+        "operating_cash_flow": 46966000000
+      },
+      "investing_activities": {
+        "capital_expenditures": -2803000000,
+        "net_intangibles": null,
+        "net_acquisitions": null,
+        "purchase_of_investments": -34913000000,
+        "sale_of_investments": 21984000000,
+        "other_investing_activity": -374000000,
+        "investing_cash_flow": -16106000000
+      },
+      "financing_activities": {
+        "long_term_debt_issuance": null,
+        "long_term_debt_payments": 0,
+        "short_term_debt_issuance": -1000000000,
+        "common_stock_issuance": null,
+        "common_stock_repurchase": -20478000000,
+        "common_dividends": -3732000000,
+        "other_financing_charges": -2949000000,
+        "financing_cash_flow": -28159000000
+      },
+      "end_cash_position": 38630000000,
+      "income_tax_paid": 5235000000,
+      "interest_paid": 531000000,
+      "free_cash_flow": 49769000000
+    }
+  ]
+}
+HTTP route
+
+/cash_flow
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+fiscal_date	string	Date of the cash flow release
+quarter	string	Fiscal quarter. Visible when &period=quarterly
+net_income	number	Returns net income (NI). Calculated as sales minus cost of goods sold
+depreciation	number	Represents depreciation and amortization measure
+deferred_taxes	number	Stands for taxes that are owed but are not due to be paid until a future date
+stock_based_compensation	number	Refers to share-based compensation as the way of paying employees, executives, and directors of a company with equity in the business
+other_non_cash_items	number	Represents other non-cash items
+accounts_receivable	number	Represents the balance of money due to a firm for goods or services delivered or used but not yet paid for by customers
+accounts_payable	number	Refers to an account within the general ledger that represents an obligation to pay off a short-term debt to creditors or suppliers
+other_assets_liabilities	number	Represents cumulative changes in inventory, other current assets, other current liabilities, and other working capital
+operating_cash_flow	number	Returns operating cash flow (OCF) measure representing a total amount of cash generated by company's normal business operations
+capital_expenditures	number	Capital expenditures (CapEx) are funds used by a company to acquire, upgrade, and maintain physical assets (PPE)
+net_intangibles	number	Represents purchase of a not physical asset
+net_acquisitions	number	Refers to net amount of business purchase and sale
+purchase_of_investments	number	Represents how much money has been used in making investments, including purchases of physical assets, investments in securities
+sale_of_investments	number	Represents how much money has been generated from the sale of securities or assets
+other_investing_activity	number	Represents other investing activity
+investing_cash_flow	number	Returns total amount of cash flow used in investments
+long_term_debt_issuance	number	Refers to the issuance of any financial obligations that extend beyond a 12 months period
+long_term_debt_payments	number	Refers to the payments of any financial obligations that extend beyond a 12 months period
+short_term_debt_issuance	number	Refers to the issuance of any financial obligations that are expected to be paid off within a year
+common_stock_issuance	number	Represents a transaction whereby a company issues its own shares to the marketplace
+common_stock_repurchase	number	Represents a transaction whereby a company buys back its own shares from the marketplace
+common_dividends	number	Returns value of payment doled out by a company to its stockholders in the form of periodic distributions of cash
+other_financing_charges	number	Represents other financing charges
+financing_cash_flow	number	Returns cash flow from financing activities (CFF), which shows the net flows of cash that are used to fund the company
+end_cash_position	number	Returns the amount of cash a company has when adding the change in cash and beginning cash balance for the current fiscal period
+income_tax_paid	number	Refers to supplemental data about income tax paid
+interest_paid	number	Refers to supplemental data about interest paid
+free_cash_flow	number	Represents the cash a company generates after accounting for cash outflows to support operations and maintain its capital assets
+JSON request example
+
+https://api.twelvedata.com/cash_flow?symbol=AAPL&apikey=demo
+
+Cash Flow consolidated
+Returns consolidated cash flow of a company showing the net amount of cash and cash equivalents being transferred into and out of business.
+
+This API endpoint is available starting with the Ultra plan. Full access to historical data is available only in the Enterprise plan.
+HTTP request example
+https://api.twelvedata.com/cash_flow/consolidated?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "cash_flow": [
+    {
+      "fiscal_date": "2023-09-30",
+      "cash_flow_from_operating_activities": {
+        "net_income_from_continuing_operations": 96995000000,
+        "operating_cash_flow": 110543000000,
+        "cash_flow_from_continuing_operating_activities": 110543000000,
+        "cash_from_discontinued_operating_activities": 108488000000,
+        "cash_flow_from_discontinued_operation": 108488000000,
+        "free_cash_flow": 99584000000,
+        "cash_flows_from_used_in_operating_activities_direct": 108488000000,
+        "taxes_refund_paid": 108488000000,
+        "taxes_refund_paid_direct": 108488000000,
+        "interest_received": 108488000000,
+        "interest_received_direct": 108488000000,
+        "interest_paid": 108488000000,
+        "interest_paid_direct": 108488000000,
+        "dividend_received": 108488000000,
+        "dividend_received_direct": 108488000000,
+        "dividend_paid": 108488000000,
+        "dividend_paid_direct": 108488000000,
+        "change_in_working_capital": -6577000000,
+        "change_in_other_working_capital": 108488000000,
+        "change_in_receivables": -417000000,
+        "changes_in_account_receivables": -1688000000,
+        "change_in_payables_and_accrued_expense": -1889000000,
+        "change_in_accrued_expense": 108488000000,
+        "change_in_payable": -1889000000,
+        "change_in_dividend_payable": 108488000000,
+        "change_in_account_payable": -1889000000,
+        "change_in_tax_payable": 108488000000,
+        "change_in_income_tax_payable": 108488000000,
+        "change_in_interest_payable": 108488000000,
+        "change_in_other_current_liabilities": 3031000000,
+        "change_in_other_current_assets": -5684000000,
+        "change_in_inventory": -1618000000,
+        "change_in_prepaid_assets": 108488000000,
+        "other_non_cash_items": -2227000000,
+        "excess_tax_benefit_from_stock_based_compensation": 108488000000,
+        "stock_based_compensation": 10833000000,
+        "unrealized_gain_loss_on_investment_securities": 108488000000,
+        "provision_and_write_off_of_assets": 108488000000,
+        "asset_impairment_charge": 108488000000,
+        "amortization_of_securities": 108488000000,
+        "deferred_tax": 108488000000,
+        "deferred_income_tax": 108488000000,
+        "depreciation_amortization_depletion": 11519000000,
+        "depletion": 108488000000,
+        "depreciation_and_amortization": 11519000000,
+        "amortization_cash_flow": 108488000000,
+        "amortization_of_intangibles": 108488000000,
+        "depreciation": 108488000000,
+        "operating_gains_losses": 108488000000,
+        "pension_and_employee_benefit_expense": 108488000000,
+        "earnings_losses_from_equity_investments": 108488000000,
+        "gain_loss_on_investment_securities": 108488000000,
+        "net_foreign_currency_exchange_gain_loss": 108488000000,
+        "gain_loss_on_sale_of_ppe": 108488000000,
+        "gain_loss_on_sale_of_business": 108488000000
+      },
+      "cash_flow_from_investing_activities": {
+        "investing_cash_flow": 3705000000,
+        "cash_flow_from_continuing_investing_activities": 3705000000,
+        "cash_from_discontinued_investing_activities": 108488000000,
+        "net_other_investing_changes": -1337000000,
+        "interest_received_cfi": 108488000000,
+        "dividends_received_cfi": 108488000000,
+        "net_investment_purchase_and_sale": 16001000000,
+        "sale_of_investment": 45514000000,
+        "purchase_of_investment": -29513000000,
+        "net_investment_properties_purchase_and_sale": 108488000000,
+        "sale_of_investment_properties": 108488000000,
+        "purchase_of_investment_properties": 108488000000,
+        "net_business_purchase_and_sale": 108488000000,
+        "sale_of_business": 108488000000,
+        "purchase_of_business": 108488000000,
+        "net_intangibles_purchase_and_sale": 108488000000,
+        "sale_of_intangibles": 108488000000,
+        "purchase_of_intangibles": 108488000000,
+        "net_ppe_purchase_and_sale": -10959000000,
+        "sale_of_ppe": 108488000000,
+        "purchase_of_ppe": -10959000000,
+        "capital_expenditure_reported": 108488000000,
+        "capital_expenditure": -10959000000
+      },
+      "cash_flow_from_financing_activities": {
+        "financing_cash_flow": -108488000000,
+        "cash_flow_from_continuing_financing_activities": -108488000000,
+        "cash_from_discontinued_financing_activities": 108488000000,
+        "net_other_financing_charges": -6012000000,
+        "interest_paid_cff": 108488000000,
+        "proceeds_from_stock_option_exercised": 108488000000,
+        "cash_dividends_paid": -15025000000,
+        "preferred_stock_dividend_paid": 108488000000,
+        "common_stock_dividend_paid": -15025000000,
+        "net_preferred_stock_issuance": 108488000000,
+        "preferred_stock_payments": 108488000000,
+        "preferred_stock_issuance": 108488000000,
+        "net_common_stock_issuance": -77550000000,
+        "common_stock_payments": -77550000000,
+        "common_stock_issuance": 108488000000,
+        "repurchase_of_capital_stock": -77550000000,
+        "net_issuance_payments_of_debt": -9901000000,
+        "net_short_term_debt_issuance": -3978000000,
+        "short_term_debt_payments": 108488000000,
+        "short_term_debt_issuance": 108488000000,
+        "net_long_term_debt_issuance": -5923000000,
+        "long_term_debt_payments": -11151000000,
+        "long_term_debt_issuance": 5228000000,
+        "issuance_of_debt": 5228000000,
+        "repayment_of_debt": -11151000000,
+        "issuance_of_capital_stock": 108488000000
+      },
+      "supplemental_data": {
+        "interest_paid_supplemental_data": 3803000000,
+        "income_tax_paid_supplemental_data": 18679000000
+      },
+      "foreign_and_domestic_sales": {
+        "foreign_sales": 108488000000,
+        "domestic_sales": 108488000000,
+        "adjusted_geography_segment_data": 108488000000
+      },
+      "cash_position": {
+        "beginning_cash_position": 24977000000,
+        "end_cash_position": 30737000000,
+        "changes_in_cash": 5760000000,
+        "other_cash_adjustment_outside_change_in_cash": 108488000000,
+        "other_cash_adjustment_inside_change_in_cash": 108488000000,
+        "effect_of_exchange_rate_changes": 108488000000
+      },
+      "direct_method_cash_flow": {
+        "classes_of_cash_receipts_from_operating_activities": 108488000000,
+        "other_cash_receipts_from_operating_activities": 108488000000,
+        "receipts_from_government_grants": 108488000000,
+        "receipts_from_customers": 108488000000,
+        "classes_of_cash_payments": 108488000000,
+        "other_cash_payments_from_operating_activities": 108488000000,
+        "payments_on_behalf_of_employees": 108488000000,
+        "payments_to_suppliers_for_goods_and_services": 108488000000
+      }
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/cash_flow/consolidated
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+period	string	• Parameter is optional
+• Values should be annual or quarterly
+start_date	string	• Parameter is optional
+• Format 2006-01-02
+end_date	string	• Parameter is optional
+• Format 2006-01-02
+outputsize	string	• Parameter is optional
+• Number of records in response; default 6
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Click to expand
+JSON request example
+
+https://api.twelvedata.com/cash_flow/consolidated?symbol=AAPL&apikey=demo
+
+Key ExecutivesUseful
+Returns individuals at the highest level of management of an organization.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/key_executives?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "key_executives": [
+    {
+      "name": "Mr. Timothy D. Cook",
+      "title": "CEO & Director",
+      "age": 59,
+      "year_born": 1961,
+      "pay": 14769259
+    },
+    {
+      "name": "Mr. Luca  Maestri",
+      "title": "CFO & Sr. VP",
+      "age": 56,
+      "year_born": 1964,
+      "pay": 4595583
+    },
+    {
+      "name": "Mr. Jeffrey E. Williams",
+      "title": "Chief Operating Officer",
+      "age": 56,
+      "year_born": 1964,
+      "pay": 4594137
+    }
+  ]
+}
+HTTP route
+
+/key_executives
+
+API credits
+
+1000 per symbol
+
+API parameters
+
+Key	Type	Description
+symbol	string	• Required parameter
+• Symbol ticker of instrument
+• For preffered stocks use dot(.) delimiter
+E.g. BRK.A or BRK.B will be correct
+figi	string	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	string	• Parameter is optional
+• Exchange where instrument is traded
+mic_code	string	• Parameter is optional
+• Market Identifier Code (MIC) under ISO 10383 standard
+country	string	• Parameter is optional
+• Country where instrument is traded
+apikey	string	• Required parameter
+• Your API key upgraded to the Pro plan or above, which can be obtained here
+Response
+
+Key	Type	Description
+name	string	Full name of an executive, including first name, middle name, last name, and suffix
+title	string	Refers to job title
+age	number	Current age of an executive if available
+year_born	number	Year of birth of an executive if available
+pay	number	Total salary of an executive if available
+JSON request example
+
+https://api.twelvedata.com/key_executives?symbol=AAPL&apikey=demo
+
+Last changesNew
+Returns the latest changes of fundamental data. This endpoint helps consume API credits more efficiently and request new data once it is updated.
+
+HTTP request example
+https://api.twelvedata.com/last_change/:endpoint?apikey=demo&start_date=2023-10-14 10:00:00
+This request will return JSON with the following structure
+[
+    {
+        "symbol": "0P0001LCQ3",
+        "mic_code": "OTCM",
+        "last_change": "2023-10-14 12:22:48"
+    },
+    {
+        "symbol": "AAPL",
+        "mic_code": "XNAS",
+        "last_change": "2023-10-14 12:22:48"
+    }
+]
+HTTP route
+
+/last_change/:endpoint
+
+API credits
+
+1 per request
+
+API parameters
+
+Parameter	Details
+apikey	• Required parameter
+• Your personal API key, which you can obtain for free here
+• Type string
+endpoint	• Required parameter
+• Endpoint name. Supported values: price_target, recommendations, statistics, insider_transactions, profile, mutual_funds_world_summary, mutual_funds_world, institutional_holders, analyst_rating, income_statement, cash_flow, balance_sheet, mutual_funds_list, mutual_funds_world_sustainability, mutual_funds_world_summary, mutual_funds_world_risk, mutual_funds_world_purchase_info, mutual_funds_world_composition, mutual_funds_world_performance, mutual_funds_world, etfs_list, etfs_world, etfs_world_summary, etfs_world_performance, etfs_world_risk, etfs_world_composition
+start_date	• Parameter is optional
+• The starting date and time for data selection, in "2006-01-02 15:04:05" format
+symbol	• Parameter is optional
+• Filter by symbol
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+mic_code	• Parameter is optional
+• Filter by market identifier code (MIC) under ISO 10383 standard
+country	• Parameter is optional
+• Filter by country name or alpha code
+page	• Parameter is optional
+• Page number; default 1
+outputsize	• Parameter is optional
+• Number of records in response; default 30
+Response
+
+Key	Type	Description
+symbol	string	Ticker of the company
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+last_change	string	The date and time of last changes, in "2006-01-02 15:04:05" format.
+JSON request example
+
+https://api.twelvedata.com/last_change/profile?start_date=2023-10-14 10:00:00&apikey=demo
+
+Market capitalizationNew
+Market capitalization history.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/market_cap?apikey=demo&symbol=AAPL
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNAS",
+    "exchange_timezone": "America/New_York"
+  },
+  "market_cap": [
+    {
+      "date": "2021-08-06",
+      "value": 10000000000
+    }
+  ]
+}
+
+HTTP route
+
+/market_cap
+
+API credits
+
+5 per request
+
+API parameters
+
+Parameter	Details
+apikey	• Required parameter
+• Your personal API key, which you can obtain for free here
+• Type string
+symbol	• Parameter is optional
+• Filter by symbol
+figi	Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+mic_code	• Parameter is optional
+• Filter by market identifier code (MIC) under ISO 10383 standard
+country	• Parameter is optional
+• Filter by country name or alpha code
+start_date
+string	• Format 2006-01-02
+end_date
+string	• Format 2006-01-02
+page	• Parameter is optional
+• Page number; default 1
+outputsize	• Parameter is optional
+• Number of records in response; default 10
+Response
+
+Key	Type	Description
+symbol	string	Ticker of the company
+name	string	Name of the company
+currency	currency in which instrument is traded by ISO 4217 standard	
+exchange	string	Exchange name where the company is listed
+mic_code	string	Market Identifier Code (MIC) under ISO 10383 standard
+market_cap	array	Market capitalization values
+market_cap.date	string	Market capitalization date
+market_cap.value	integer	Market capitalization value
+JSON request example
+
+https://api.twelvedata.com/market_cap
+
+Analysis
+
+Earnings EstimateUseful
+This API endpoint returns analysts' estimate for a company's future quarterly and annual earnings per share (EPS).
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/earnings_estimate?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "earnings_estimate": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "number_of_analysts": 27,
+      "avg_estimate": 1.26,
+      "low_estimate": 1.13,
+      "high_estimate": 1.35,
+      "year_ago_eps": 1.24
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "number_of_analysts": 23,
+      "avg_estimate": 2.12,
+      "low_estimate": 2.01,
+      "high_estimate": 2.29,
+      "year_ago_eps": 2.1
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "number_of_analysts": 37,
+      "avg_estimate": 6.1,
+      "low_estimate": 5.96,
+      "high_estimate": 6.4,
+      "year_ago_eps": 5.61
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "number_of_analysts": 37,
+      "avg_estimate": 6.44,
+      "low_estimate": 5.79,
+      "high_estimate": 7.06,
+      "year_ago_eps": 6.1
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/earnings_estimate
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+number_of_analysts	number of analysts that made the estimation
+avg_estimate	average estimation across analysts
+low_estimate	lowest estimation given by an analyst
+high_estimate	highest estimation given by an analyst
+year_ago_eps	average estimation of this period’s earnings given a year ago
+JSON request example
+
+https://api.twelvedata.com/earnings_estimate?symbol=aapl&apikey=demo
+
+Revenue Estimate
+This API endpoint returns analysts' estimate for a company's future quarterly and annual sales (total revenue).
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/revenue_estimate?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "revenue_estimate": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "number_of_analysts": 24,
+      "avg_estimate": 88631500000,
+      "low_estimate": 85144300000,
+      "high_estimate": 92794900000,
+      "year_ago_sales": 83360000000,
+      "sales_growth": 0.06
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "number_of_analysts": 20,
+      "avg_estimate": 127693000000,
+      "low_estimate": 122868000000,
+      "high_estimate": 132979000000,
+      "year_ago_sales": null,
+      "sales_growth": null
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "number_of_analysts": 36,
+      "avg_estimate": 392509000000,
+      "low_estimate": 389326000000,
+      "high_estimate": 396977000000,
+      "year_ago_sales": 365817000000,
+      "sales_growth": 0.07
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "number_of_analysts": 36,
+      "avg_estimate": 411466000000,
+      "low_estimate": 387836000000,
+      "high_estimate": 441307000000,
+      "year_ago_sales": 392509000000,
+      "sales_growth": 0.05
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/revenue_estimate
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+dp	• Number of decimal places for floating values
+• Should be in range [0,11] inclusive. Default 5
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+number_of_analysts	number of analysts that made the estimation
+avg_estimate	average estimation across analysts
+low_estimate	lowest estimation given by an analyst
+high_estimate	highest estimation given by an analyst
+year_ago_sales	total revenue received a year ago relative to period
+sales_growth	estimated sales growth of the period in relation to year-ago sales in prc (%)
+JSON request example
+
+https://api.twelvedata.com/revenue_estimate?symbol=aapl&apikey=demo
+
+EPS Trend
+This API endpoint returns a breakdown of the estimated historical EPS changes at a given period.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/eps_trend?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "eps_trend": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "current_estimate": 1.26,
+      "7_days_ago": 1.26,
+      "30_days_ago": 1.31,
+      "60_days_ago": 1.32,
+      "90_days_ago": 1.33
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "current_estimate": 2.12,
+      "7_days_ago": 2.11,
+      "30_days_ago": 2.18,
+      "60_days_ago": 2.19,
+      "90_days_ago": 2.19
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "current_estimate": 6.1,
+      "7_days_ago": 6.1,
+      "30_days_ago": 6.13,
+      "60_days_ago": 6.14,
+      "90_days_ago": 6.14
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "current_estimate": 6.44,
+      "7_days_ago": 6.44,
+      "30_days_ago": 6.51,
+      "60_days_ago": 6.55,
+      "90_days_ago": 6.56
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/eps_trend
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+current_estimate	actual EPS estimation for the period
+7_days_ago	EPS estimation value 7 days ago
+30_days_ago	EPS estimation value 30 days ago
+60_days_ago	EPS estimation value 60 days ago
+90_days_ago	EPS estimation value 90 days ago
+JSON request example
+
+https://api.twelvedata.com/eps_trend?symbol=aapl&apikey=demo
+
+EPS Revisions
+This API endpoint returns analysts’ revisions of a company's future quarterly and annual earnings per share (EPS) over the last week and month.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/eps_revisions?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "eps_revision": [
+    {
+      "date": "2022-09-30",
+      "period": "current_quarter",
+      "up_last_week": 1,
+      "up_last_month": 5,
+      "down_last_week": 0,
+      "down_last_month": 0
+    },
+    {
+      "date": "2022-12-31",
+      "period": "next_quarter",
+      "up_last_week": 1,
+      "up_last_month": 5,
+      "down_last_week": 0,
+      "down_last_month": 0
+    },
+    {
+      "date": "2022-09-30",
+      "period": "current_year",
+      "up_last_week": 1,
+      "up_last_month": 10,
+      "down_last_week": 0,
+      "down_last_month": 1
+    },
+    {
+      "date": "2023-09-30",
+      "period": "next_year",
+      "up_last_week": 1,
+      "up_last_month": 10,
+      "down_last_week": 0,
+      "down_last_month": 1
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/eps_revisions
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+period	defines period of estimation, can be current_quarter, next_quarter, current_year, or next_year
+up_last_week	number of up revisions over the last 7 days
+up_last_month	number of up revisions over the last 30 days
+down_last_week	number of down revisions over the last 7 days
+down_last_month	number of down revisions over the last 30 days
+JSON request example
+
+https://api.twelvedata.com/eps_revisions?symbol=aapl&apikey=demo
+
+Growth Estimates
+This API endpoint returns consensus analyst estimates over the company's growth rates for various periods. Calculation averages projections of numerous analysts, taking arbitrary parameters, such as earnings per share, revenue, etc.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/growth_estimates?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "growth_estimates": {
+    "current_quarter": 0.016,
+    "next_quarter": 0.01,
+    "current_year": 0.087,
+    "next_year": 0.055999998,
+    "next_5_years_pa": 0.094799995,
+    "past_5_years_pa": 0.23867
+  },
+  "status": "ok"
+}
+HTTP route
+
+/growth_estimates
+
+API credits
+
+20 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+current_quarter	projected growth of the current quarter in prc (%)
+next_quarter	projected growth of the next quarter in prc (%)
+current_year	projected growth of the current year in prc (%)
+next_year	projected growth of the next year in prc (%)
+next_5_years_pa	projected growth during the next 5 years in prc (%) per annum
+past_5_years_pa	actual growth over the last 5 years in prc (%) per annum
+JSON request example
+
+https://api.twelvedata.com/growth_estimates?symbol=aapl&apikey=demo
+
+RecommendationsHigh Demand
+This API endpoint returns the average of all analyst recommendations and classifies them as Strong Buy, Buy, Hold, or Sell. Also, it returns a recommendation score.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/recommendations?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "trends": {
+    "current_month": {
+      "strong_buy": 11,
+      "buy": 21,
+      "hold": 6,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "previous_month": {
+      "strong_buy": 14,
+      "buy": 24,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "2_months_ago": {
+      "strong_buy": 14,
+      "buy": 24,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    },
+    "3_months_ago": {
+      "strong_buy": 13,
+      "buy": 20,
+      "hold": 8,
+      "sell": 0,
+      "strong_sell": 0
+    }
+  },
+  "rating": 8.2,
+  "status": "ok"
+}
+HTTP route
+
+/recommendations
+
+API credits
+
+100 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+strong_buy	number of analysts that give a strong buy recommendation
+buy	number of analysts that give a buy recommendation
+hold	number of analysts that give a hold recommendation
+sell	number of analysts that give a sell recommendation
+strong_sell	number of analysts that give a strong sell recommendation
+rating	rating from 0 to 10 represents overall analysts’ recommendation. 0 to 2 - strong sell, 2 to 4 - sell, 4 to 6 - hold, 6 to 8 - buy, 8 to 10 - strong buy.
+JSON request example
+
+https://api.twelvedata.com/recommendations?symbol=aapl&apikey=demo
+
+Price TargetHigh Demand
+This API endpoint returns the analysts' projection of a security's future price.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/price_target?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "price_target": {
+    "high": 220,
+    "median": 185,
+    "low": 136,
+    "average": 184.01,
+    "current": 169.5672
+  },
+  "status": "ok"
+}
+HTTP route
+
+/price_target
+
+API credits
+
+75 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+high	highest price target given by an analyst
+median	median price target given across analysts
+low	lowest price target given by an analyst
+average	average price target given across analysts
+current	current price from of a security
+JSON request example
+
+https://api.twelvedata.com/price_target?symbol=aapl&apikey=demo
+
+Analyst Ratings - Light
+This API endpoint returns a lightweight version of ratings issued by analyst firms. Works for US and international markets.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/analyst_ratings/light?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "ratings": [
+    {
+      "date": "2022-08-19",
+      "firm": "Keybanc",
+      "rating_change": "Maintains",
+      "rating_current": "Overweight",
+      "rating_prior": "Overweight"
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Credit Suisse",
+      "rating_change": "Upgrade",
+      "rating_current": "Outperform",
+      "rating_prior": "Neutral"
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Wedbush",
+      "rating_change": "Maintains",
+      "rating_current": "Outperform",
+      "rating_prior": "Outperform"
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/analyst_ratings/light
+
+API credits
+
+75 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+country	• Parameter is optional
+• Filter by country name or alpha code
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+rating_change	• Parameter is optional
+• Filter by rating change action: Maintains, Upgrade, Downgrade, Initiates or Reiterates
+outputsize	• Parameter is optional
+• Number of records in response; default 30
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+date	date when the rating was released
+firm	firm that issued the ranking
+rating_change	defines the action of the firm to ranking, could be Maintains, Upgrade, Downgrade, Initiates or Reiterates
+rating_current	current firm's ranking of the instrument
+rating_prior	prior firm's ranking of the instrument
+JSON request example
+
+https://api.twelvedata.com/analyst_ratings/light?symbol=aapl&apikey=demo
+
+https://api.twelvedata.com/analyst_ratings/light?symbol=infy&country=india&apikey=demo
+
+Analyst Ratings - US Equities
+This API endpoint returns complete information on ratings issued by analyst firms. Works only for US equities.
+
+This API endpoint is available starting with the Ultra plan.
+HTTP request example
+https://api.twelvedata.com/analyst_ratings/us_equities?symbol=AAPL&apikey=your_api_key
+This request will return JSON with the following structure
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange_timezone": "America/New_York",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "type": "Common Stock"
+  },
+  "ratings": [
+    {
+      "date": "2022-08-19",
+      "firm": "Keybanc",
+      "analyst_name": "Brandon Nispel",
+      "rating_change": "Maintains",
+      "rating_current": "Overweight",
+      "rating_prior": "Overweight",
+      "time": "08:29:48",
+      "action_price_target": "Raises",
+      "price_target_current": 185,
+      "price_target_prior": 177
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Credit Suisse",
+      "analyst_name": "Shannon Cross",
+      "rating_change": "Upgrade",
+      "rating_current": "Outperform",
+      "rating_prior": "Neutral",
+      "time": "08:14:09",
+      "action_price_target": "Announces",
+      "price_target_current": 201,
+      "price_target_prior": null
+    },
+    {
+      "date": "2022-08-17",
+      "firm": "Wedbush",
+      "analyst_name": "Daniel Ives",
+      "rating_change": "Maintains",
+      "rating_current": "Outperform",
+      "rating_prior": "Outperform",
+      "time": "10:22:55",
+      "action_price_target": "Raises",
+      "price_target_current": 220,
+      "price_target_prior": 200
+    }
+  ],
+  "status": "ok"
+}
+HTTP route
+
+/analyst_ratings/us_equities
+
+API credits
+
+200 per symbol
+
+API parameters
+
+Parameter	Details
+symbol	• Required parameter
+• Filter by symbol
+figi	• Parameter is optional
+• Filter by financial instrument global identifier (FIGI)
+exchange	• Parameter is optional
+• Filter by exchange name or mic code
+rating_change	• Parameter is optional
+• Filter by rating change action: Maintains, Upgrade, Downgrade, Initiates, Reiterates, Assumes, or Reinstates
+outputsize	• Parameter is optional
+• Number of records in response; default 30
+apikey	• Required parameter
+• Your API key at the Ultra plan or above
+Response
+
+Key	Description
+date	date when the rating was released
+firm	firm that issued the ranking
+analyst_name	name of an analyst
+rating_change	defines the action of the firm to ranking, could be Maintains, Upgrade, Downgrade, Initiates, Reiterates, Assumes, or Reinstates
+rating_current	current firm's ranking of the instrument
+rating_prior	prior firm's ranking of the instrument
+time	time when the rating was released or updated
+action_price_target	action that firm took towards target price
+price_target_current	current firm's price target for the instrument
+price_target_prior	prior firm's price target for the instrument
+JSON request example
+
+https://api.twelvedata.com/analyst_ratings/us_equities?symbol=aapl&apikey=demo
