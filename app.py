@@ -55,15 +55,118 @@ def get_market_movers():
         
         # Format the results for display
         market_movers = []
+        symbols_to_prefetch = []
+        
         if 'values' in data and data['values']:
             for item in data['values']:
+                symbol = item.get('symbol', '')
                 market_movers.append({
-                    'symbol': item.get('symbol', ''),
+                    'symbol': symbol,
                     'name': item.get('name', ''),
                     'last_price': item.get('last', 0),
                     'change': item.get('change', 0),
                     'percent_change': item.get('percent_change', 0)
                 })
+                
+                # Add to prefetch list
+                if symbol:
+                    symbols_to_prefetch.append(symbol)
+                    
+        # Prefetch data for all market movers to ensure detailed views work
+        if symbols_to_prefetch:
+            logger.debug(f"Pre-fetching data for {len(symbols_to_prefetch)} market mover symbols")
+            for symbol in symbols_to_prefetch:
+                try:
+                    # Check if we already have data for this stock
+                    stock = Stock.query.filter_by(symbol=symbol).first()
+                    if not stock or not ScreeningResult.query.filter_by(stock_id=stock.id).first():
+                        # Fetch detailed data for this symbol
+                        logger.debug(f"Pre-fetching details for {symbol}")
+                        stock_data = screener.get_stock_details(symbol)
+                        
+                        # Save to database
+                        if stock_data:
+                            # Find or create the stock
+                            if not stock:
+                                stock = Stock(
+                                    symbol=symbol,
+                                    company_name=stock_data.get("company_name", symbol)
+                                )
+                                db.session.add(stock)
+                                db.session.flush()
+                            else:
+                                stock.company_name = stock_data.get("company_name", symbol)
+                                stock.last_updated = datetime.utcnow()
+                            
+                            # Create technical/fundamental results
+                            tech_data = stock_data.get("technical_data", {})
+                            fund_data = stock_data.get("fundamental_data", {})
+                            
+                            result = ScreeningResult(
+                                stock_id=stock.id,
+                                current_price=tech_data.get("current_price"),
+                                sma50=tech_data.get("sma50"),
+                                sma100=tech_data.get("sma100"),
+                                sma200=tech_data.get("sma200"),
+                                sma200_slope=tech_data.get("sma200_slope"),
+                                price_above_sma200=tech_data.get("price_above_sma200", False),
+                                sma200_slope_positive=tech_data.get("sma200_slope_positive", False),
+                                sma50_above_sma200=tech_data.get("sma50_above_sma200", False),
+                                sma100_above_sma200=tech_data.get("sma100_above_sma200", False),
+                                quarterly_sales_growth_positive=fund_data.get("quarterly_sales_growth_positive", False),
+                                quarterly_eps_growth_positive=fund_data.get("quarterly_eps_growth_positive", False),
+                                estimated_sales_growth_positive=fund_data.get("estimated_sales_growth_positive", False),
+                                estimated_eps_growth_positive=fund_data.get("estimated_eps_growth_positive", False)
+                            )
+                            
+                            # Set chart data
+                            if "chart_data" in stock_data:
+                                result.set_chart_data(stock_data["chart_data"])
+                            
+                            db.session.add(result)
+                            
+                            # Store fundamental data
+                            if fund_data:
+                                fundamental = StockFundamentals.query.filter_by(stock_id=stock.id).first()
+                                if not fundamental:
+                                    fundamental = StockFundamentals(stock_id=stock.id)
+                                    db.session.add(fundamental)
+                                
+                                fundamental.quarterly_revenue_growth = fund_data.get("quarterly_sales_growth")
+                                fundamental.quarterly_eps_growth = fund_data.get("quarterly_eps_growth")
+                                fundamental.estimated_sales_growth = fund_data.get("estimated_sales_growth")
+                                fundamental.estimated_eps_growth = fund_data.get("estimated_eps_growth")
+                                fundamental.last_updated = datetime.utcnow()
+                                
+                                # Store the raw data for advanced metrics
+                                raw_data = {
+                                    'general': {'name': stock.company_name},
+                                    'estimates': {'annual': {}}
+                                }
+                                
+                                # Include all available growth metrics in the raw data
+                                annual_estimates = raw_data['estimates']['annual']
+                                annual_estimates['eps_growth'] = fund_data.get("estimated_eps_growth", 0)
+                                annual_estimates['revenue_growth'] = fund_data.get("estimated_sales_growth", 0)
+                                
+                                if 'current_quarter_growth' in fund_data:
+                                    annual_estimates['current_quarter_growth'] = fund_data.get("current_quarter_growth")
+                                if 'next_quarter_growth' in fund_data:
+                                    annual_estimates['next_quarter_growth'] = fund_data.get("next_quarter_growth")
+                                if 'current_year_growth' in fund_data:
+                                    annual_estimates['current_year_growth'] = fund_data.get("current_year_growth")
+                                if 'next_5_years_growth' in fund_data:
+                                    annual_estimates['next_5_years_growth'] = fund_data.get("next_5_years_growth")
+                                    
+                                # Save the raw data
+                                fundamental.set_raw_data(raw_data)
+                except Exception as e:
+                    logger.warning(f"Error pre-fetching details for {symbol}: {str(e)}")
+                    # Continue with the next symbol
+                    continue
+            
+            # Commit all database changes
+            db.session.commit()
                 
         # Cache the results
         app.cached_market_movers = market_movers
@@ -72,6 +175,7 @@ def get_market_movers():
         return jsonify({"success": True, "market_movers": market_movers})
     except Exception as e:
         logger.error(f"Error fetching market movers: {str(e)}")
+        db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/screen')
