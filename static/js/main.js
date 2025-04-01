@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const stocksContainer = document.getElementById('stocks-container');
     const noResults = document.getElementById('no-results');
     
+    // Market movers elements
+    const marketMoversLoading = document.getElementById('market-movers-loading');
+    const marketMoversError = document.getElementById('market-movers-error');
+    const marketMoversTable = document.getElementById('market-movers-table');
+    const marketMoversBody = document.getElementById('market-movers-body');
+    
     // Modal elements
     const stockDetailModal = document.getElementById('stockDetailModal');
     const modalLoading = document.getElementById('modal-loading');
@@ -337,7 +343,86 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Load market movers data
+    function loadMarketMovers() {
+        // Show loading state
+        if (marketMoversLoading) marketMoversLoading.classList.remove('d-none');
+        if (marketMoversTable) marketMoversTable.classList.add('d-none');
+        if (marketMoversError) marketMoversError.classList.add('d-none');
+        
+        // Fetch market movers data
+        fetch('/api/market_movers')
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading state
+                if (marketMoversLoading) marketMoversLoading.classList.add('d-none');
+                
+                // Check for success
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to load market movers');
+                }
+                
+                // Check if we have results
+                if (!data.market_movers || data.market_movers.length === 0) {
+                    throw new Error('No market movers data available');
+                }
+                
+                // Populate the table
+                if (marketMoversBody) {
+                    marketMoversBody.innerHTML = '';
+                    
+                    data.market_movers.forEach(stock => {
+                        const row = document.createElement('tr');
+                        const isPositive = parseFloat(stock.percent_change) > 0;
+                        const changeClass = isPositive ? 'text-success' : 'text-danger';
+                        const changeIcon = isPositive 
+                            ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'
+                            : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-down"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+                        
+                        row.innerHTML = `
+                            <td><strong>${stock.symbol}</strong></td>
+                            <td>${stock.name || '-'}</td>
+                            <td>$${formatNumber(stock.last_price)}</td>
+                            <td class="${changeClass}">
+                                ${changeIcon} ${stock.change > 0 ? '+' : ''}${formatNumber(stock.change)}
+                            </td>
+                            <td class="${changeClass}">
+                                ${formatPercent(stock.percent_change, 2)}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary view-details-mover" data-symbol="${stock.symbol}">
+                                    View
+                                </button>
+                            </td>
+                        `;
+                        
+                        marketMoversBody.appendChild(row);
+                    });
+                    
+                    // Add event listeners to view buttons
+                    document.querySelectorAll('.view-details-mover').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const symbol = this.getAttribute('data-symbol');
+                            showStockDetail(symbol);
+                        });
+                    });
+                    
+                    // Show the table
+                    if (marketMoversTable) marketMoversTable.classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading market movers:', error);
+                if (marketMoversLoading) marketMoversLoading.classList.add('d-none');
+                if (marketMoversError) {
+                    marketMoversError.classList.remove('d-none');
+                    marketMoversError.textContent = `Could not load market movers: ${error.message}`;
+                }
+            });
+    }
+    
     // Initial loads
     loadStockData(true);
     loadDatabaseStats();
+    loadMarketMovers();
 });

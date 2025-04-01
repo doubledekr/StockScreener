@@ -1,5 +1,6 @@
 import os
 import logging
+import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
 from stock_screener import StockScreener
@@ -30,6 +31,48 @@ screener = StockScreener(api_key=os.environ.get("TWELVEDATA_API_KEY", ""))
 def index():
     """Render the main page"""
     return render_template('index.html')
+    
+@app.route('/api/market_movers')
+def get_market_movers():
+    """Get the current market movers"""
+    try:
+        logger.debug("Fetching market movers")
+        
+        # Check if we have cached results that are less than 15 mins old
+        cache_date = datetime.utcnow() - timedelta(minutes=15)
+        if hasattr(app, 'cached_market_movers') and hasattr(app, 'market_movers_timestamp'):
+            if app.market_movers_timestamp >= cache_date:
+                logger.debug("Using cached market movers")
+                return jsonify({"success": True, "market_movers": app.cached_market_movers})
+            
+        # Fetch market movers directly from API
+        params = {
+            "outputsize": 10,  # Limit to top 10
+            "apikey": os.environ.get('TWELVEDATA_API_KEY')
+        }
+        response = requests.get("https://api.twelvedata.com/market_movers/stocks", params=params, timeout=10)
+        data = response.json()
+        
+        # Format the results for display
+        market_movers = []
+        if 'values' in data and data['values']:
+            for item in data['values']:
+                market_movers.append({
+                    'symbol': item.get('symbol', ''),
+                    'name': item.get('name', ''),
+                    'last_price': item.get('last', 0),
+                    'change': item.get('change', 0),
+                    'percent_change': item.get('percent_change', 0)
+                })
+                
+        # Cache the results
+        app.cached_market_movers = market_movers
+        app.market_movers_timestamp = datetime.utcnow()
+        
+        return jsonify({"success": True, "market_movers": market_movers})
+    except Exception as e:
+        logger.error(f"Error fetching market movers: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/screen')
 def screen_stocks():

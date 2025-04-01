@@ -44,7 +44,54 @@
                 
                 <div class="row mb-4">
                     <div class="col-md-8">
-                        <h3>Top 10 Qualified Stocks</h3>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trending-up me-2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                        <polyline points="17 6 23 6 23 12"></polyline>
+                                    </svg>
+                                    Market Movers
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="market-movers-loading" class="text-center my-3">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Loading market movers...</span>
+                                </div>
+                                <div id="market-movers-error" class="alert alert-warning d-none" role="alert">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle me-2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    Could not load market movers.
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="market-movers-table" class="table table-sm table-hover d-none">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Company</th>
+                                                <th>Price</th>
+                                                <th>Change</th>
+                                                <th>% Change</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="market-movers-body">
+                                            <!-- Market movers will be populated here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <h3>Top 10 Qualified Stocks</h3>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card">
