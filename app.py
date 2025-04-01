@@ -103,11 +103,25 @@ def get_market_movers():
         # Prefetch data for all market movers to ensure detailed views work
         if symbols_to_prefetch:
             logger.debug(f"Pre-fetching data for {len(symbols_to_prefetch)} market mover symbols")
+            
+            # Always fetch fresh data for market movers to ensure we have the latest
             for symbol in symbols_to_prefetch:
                 try:
                     # Check if we already have data for this stock
                     stock = Stock.query.filter_by(symbol=symbol).first()
-                    if not stock or not ScreeningResult.query.filter_by(stock_id=stock.id).first():
+                    
+                    # For market movers, always get fresh data if older than 1 hour
+                    needs_refresh = True
+                    if stock:
+                        # Check if we have recent data (last hour)
+                        recent_result = ScreeningResult.query.filter(
+                            ScreeningResult.stock_id == stock.id,
+                            ScreeningResult.screening_date >= (datetime.utcnow() - timedelta(hours=1))
+                        ).first()
+                        if recent_result:
+                            needs_refresh = False
+                    
+                    if needs_refresh:
                         # Fetch detailed data for this symbol
                         logger.debug(f"Pre-fetching details for {symbol}")
                         stock_data = screener.get_stock_details(symbol)
@@ -553,9 +567,14 @@ def get_stock_data(symbol):
                     else:
                         stock_data["fundamental_data"][key] = None
             
-            # Copy chart data
-            if "chart_data" in api_stock_data:
+            # Copy chart data - ensure it's always available
+            if "chart_data" in api_stock_data and api_stock_data["chart_data"]:
                 stock_data["chart_data"] = api_stock_data["chart_data"]
+            else:
+                # If no chart data available, create a fallback request right now
+                logger.debug(f"Chart data missing for {symbol}, fetching directly")
+                chart_data = screener._prepare_chart_data(symbol)
+                stock_data["chart_data"] = chart_data
         
             # Save to database if successful
             try:
@@ -598,7 +617,8 @@ def get_stock_data(symbol):
                 
                 db.session.add(result)
                 
-                # Store fundamental data
+                # Store fundamental data if we have any
+                fund_data = api_stock_data.get("fundamental_data", {})
                 if fund_data:
                     fundamental = StockFundamentals.query.filter_by(stock_id=db_stock.id).first()
                     if not fundamental:

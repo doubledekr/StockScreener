@@ -730,9 +730,27 @@ class StockScreener:
 
     def _prepare_chart_data(self, symbol):
         """Prepare chart data for a stock"""
-        df = self._fetch_time_series(symbol, outputsize=200)
-        if df is None:
-            return None
+        # Try to fetch time series data with multiple attempts if needed
+        for attempt in range(2):
+            df = self._fetch_time_series(symbol, outputsize=200)
+            if df is not None and not df.empty:
+                break
+            # If first attempt failed, wait a bit and try again with a smaller window
+            if attempt == 0:
+                logger.debug(f"First chart data attempt failed for {symbol}, retrying with smaller window")
+                time.sleep(0.5)  # Add a small delay
+        
+        # If we still couldn't get data, return a minimal empty chart structure
+        if df is None or df.empty:
+            logger.warning(f"Could not fetch chart data for {symbol} after multiple attempts")
+            # Return minimal empty chart data instead of None
+            return {
+                "dates": [],
+                "prices": [],
+                "sma50": [],
+                "sma100": [],
+                "sma200": []
+            }
 
         # Calculate moving averages for the chart
         df['sma50'] = self._calculate_sma(df, 50)
@@ -740,26 +758,82 @@ class StockScreener:
         df['sma200'] = self._calculate_sma(df, 200)
         
         # Format data for Chart.js - convert pandas series to Python native types
-        chart_data = {
-            "dates": [str(d) for d in df['datetime'].tolist()],
-            "prices": [float(p) if pd.notna(p) else None for p in df['close'].tolist()],
-            "sma50": [float(p) if pd.notna(p) else None for p in df['sma50'].tolist()],
-            "sma100": [float(p) if pd.notna(p) else None for p in df['sma100'].tolist()],
-            "sma200": [float(p) if pd.notna(p) else None for p in df['sma200'].tolist()]
-        }
+        # Handle potential missing columns
+        try:
+            chart_data = {
+                "dates": [str(d) for d in df['datetime'].tolist()],
+                "prices": [float(p) if pd.notna(p) else None for p in df['close'].tolist()],
+                "sma50": [float(p) if pd.notna(p) else None for p in df['sma50'].tolist()],
+                "sma100": [float(p) if pd.notna(p) else None for p in df['sma100'].tolist()],
+                "sma200": [float(p) if pd.notna(p) else None for p in df['sma200'].tolist()]
+            }
+        except Exception as e:
+            logger.error(f"Error formatting chart data for {symbol}: {str(e)}")
+            # Return minimal empty chart data in case of error
+            chart_data = {
+                "dates": [],
+                "prices": [],
+                "sma50": [],
+                "sma100": [],
+                "sma200": []
+            }
         
         return chart_data
 
     def get_stock_details(self, symbol):
         """Get detailed data for a stock"""
+        # Try additional TwelveData endpoints to gather more information
+        company_name = symbol
+        price_data = {}
+        
+        # Attempt to get quote data which might be available even when time series isn't
+        try:
+            # Check cache first
+            cache_key = f"quote_{symbol}"
+            if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
+                quote_data = self.cache[cache_key]['data']
+            else:
+                # Fetch current quote data
+                params = {"symbol": symbol, "apikey": self.api_key}
+                response = requests.get(f"{self.base_url}/quote", params=params, timeout=10)
+                quote_data = response.json()
+                
+                # Cache the result
+                self.cache[cache_key] = {
+                    'data': quote_data,
+                    'timestamp': time.time()
+                }
+                
+            # Extract price data if available
+            if isinstance(quote_data, dict) and 'close' in quote_data:
+                price_data = {
+                    "current_price": float(quote_data.get('close', 0)),
+                    "change": float(quote_data.get('change', 0)),
+                    "percent_change": float(quote_data.get('percent_change', 0))
+                }
+                company_name = quote_data.get('name', symbol)
+        except Exception as e:
+            logger.warning(f"Could not fetch quote data for {symbol}: {str(e)}")
+        
+        # Now run the regular technical and fundamental analysis
         technical_passed, technical_data = self._check_technical_criteria(symbol)
         fundamental_passed, fundamental_data = self._check_fundamental_criteria(symbol)
+        
+        # Override company name from fundamental data if available
+        if fundamental_data and 'company_name' in fundamental_data:
+            company_name = fundamental_data.get('company_name')
+            
+        # Add basic price data if technical data doesn't have it
+        if technical_data and 'current_price' not in technical_data and price_data:
+            technical_data.update(price_data)
+        
+        # Always prepare chart data, which now handles missing data gracefully
         chart_data = self._prepare_chart_data(symbol)
         
         return {
             "symbol": symbol,
-            "company_name": fundamental_data.get("company_name", symbol),
-            "technical_data": technical_data,
+            "company_name": company_name,
+            "technical_data": technical_data if technical_data else price_data,
             "fundamental_data": fundamental_data,
             "chart_data": chart_data,
             "passes_all_criteria": technical_passed and fundamental_passed
