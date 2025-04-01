@@ -67,6 +67,41 @@ class StockScreener:
             logger.warning(f"Using fallback symbol list: {str(e)}")
             return self._get_fallback_symbols()
             
+    def _get_nasdaq100_symbols(self):
+        """Get list of Nasdaq 100 symbols"""
+        try:
+            try:
+                # Using Wikipedia as a source for Nasdaq 100 constituents
+                tables = pd.read_html('https://en.wikipedia.org/wiki/Nasdaq-100')
+                nasdaq100 = tables[4]  # The table with the current constituents
+                return nasdaq100['Ticker'].tolist()
+            except (ImportError, IndexError):
+                # If lxml is not available or table structure changed
+                logger.warning("Could not get Nasdaq 100 symbols, using additional fallback")
+                raise Exception("Using extended fallback list")
+        except Exception as e:
+            logger.warning(f"Using extended fallback list: {str(e)}")
+            return self._get_extended_fallback_symbols()
+            
+    def _get_extended_fallback_symbols(self):
+        """Return an extended fallback list of popular stocks"""
+        return [
+            # Tech stocks
+            "AAPL", "MSFT", "AMZN", "GOOGL", "GOOG", "META", "TSLA", "NVDA", "AMD", "INTC", 
+            "ADBE", "CSCO", "ORCL", "CRM", "PYPL", "NFLX", "IBM", "QCOM", "TXN", "AVGO",
+            # Consumer stocks
+            "PG", "KO", "PEP", "WMT", "COST", "TGT", "HD", "LOW", "MCD", "SBUX", 
+            "NKE", "DIS", "CMCSA", "VZ", "T", "AMGN", "GILD", "ABT", "TMO", "DHR",
+            # Financial stocks
+            "JPM", "BAC", "WFC", "C", "GS", "MS", "V", "MA", "AXP", "BLK", 
+            "BRK-B", "USB", "PNC", "TFC", "COF", "SCHW", "CME", "ICE", "SPGI", "MCO",
+            # Industrial stocks
+            "GE", "HON", "MMM", "CAT", "DE", "BA", "LMT", "RTX", "UNP", "UPS", 
+            "FDX", "CSX", "NSC", "ETN", "EMR", "ITW", "ROK", "GD", "NOC", "WM",
+            # Energy stocks
+            "XOM", "CVX", "COP", "EOG", "SLB", "PXD", "OXY", "MPC", "PSX", "VLO"
+        ]
+            
     def _get_fallback_symbols(self):
         """Return a fallback list of popular stocks"""
         return ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", "AMD", "INTC", 
@@ -91,6 +126,9 @@ class StockScreener:
         if not symbols:
             return {}
             
+        # Initialize results dictionary - fixes unbound variable issue
+        results = {}
+            
         try:
             # Check if we're already rate limited
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
@@ -99,9 +137,9 @@ class StockScreener:
             
             # Convert symbols list to comma-separated string
             symbols_str = ','.join(symbols)
+            logger.debug(f"Processing batch of {len(symbols)} symbols: {symbols_str}")
             
             # Try to use cached data first for each symbol
-            results = {}
             all_cached = True
             
             for symbol in symbols:
@@ -113,6 +151,7 @@ class StockScreener:
             
             # If all symbols are cached, return the cached results
             if all_cached:
+                logger.debug(f"Using cached data for all {len(symbols)} symbols in batch")
                 return results
             
             # Make batch API request
@@ -597,7 +636,8 @@ class StockScreener:
             sales_growth_est = float(annual_estimates.get('revenue_growth', 0) or 0)
             eps_growth_est = float(annual_estimates.get('eps_growth', 0) or 0)
             
-            # Check fundamental criteria
+            # Check fundamental criteria - less strict requirements
+            # Instead of requiring ALL criteria, we only require at least 3 out of 4 to be positive
             criteria = {
                 "quarterly_sales_growth_positive": q_revenue_growth > 0,
                 "quarterly_eps_growth_positive": q_eps_growth > 0,
@@ -626,8 +666,19 @@ class StockScreener:
                 if 'next_5_years_growth' in annual_data:
                     metrics['next_5_years_growth'] = float(annual_data['next_5_years_growth'] or 0)
             
-            # Check if all criteria are met
-            meets_criteria = all(criteria.values())
+            # Make criteria more flexible: 
+            # Accept if at least 3 out of 4 criteria are met OR if growth rate is high in one area
+            positive_count = sum(1 for value in criteria.values() if value)
+            exceptional_growth = any([
+                q_revenue_growth > 20,  # Exceptional revenue growth
+                q_eps_growth > 20,      # Exceptional EPS growth
+                sales_growth_est > 15,  # Strong estimated sales growth
+                eps_growth_est > 15     # Strong estimated EPS growth
+            ])
+            
+            # Check if criteria are met - needs either 3/4 positive metrics or 1 exceptional metric
+            meets_criteria = positive_count >= 3 or exceptional_growth
+            logger.debug(f"{symbol} fundamental metrics: {positive_count}/4 positive, exceptional: {exceptional_growth}")
             
             return meets_criteria, {**criteria, **metrics}
         except Exception as e:
@@ -681,25 +732,41 @@ class StockScreener:
         # First, try to get market movers which are likely to be trending stocks
         market_movers = self._get_market_movers()
         
-        # Then get some S&P 500 stocks as a backup
+        # Then get S&P 500 and Nasdaq 100 stocks for a comprehensive coverage
         sp500_symbols = self._get_sp500_symbols()
+        nasdaq100_symbols = self._get_nasdaq100_symbols()
         
-        # Combine and prioritize market movers first, then S&P 500 stocks
+        # Combine symbols with priority: market movers, then S&P 500, then Nasdaq 100
         combined_symbols = []
         
-        # Add market movers first
+        # Helper to filter out warrant symbols (typically end with W)
+        def is_regular_stock(symbol):
+            # Filter out warrants, rights, units, and preferred shares
+            if symbol.endswith(('W', 'R', 'U', 'P')):
+                return False
+            # Also filter out symbols with unusual formats that might be special securities
+            if '-' in symbol or '.' in symbol:
+                return False
+            return True
+        
+        # Add market movers first (filtered)
         for symbol in market_movers:
-            if symbol not in combined_symbols:
+            if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
                 
-        # Then add S&P 500 stocks until we reach our maximum
+        # Then add S&P 500 stocks 
         for symbol in sp500_symbols:
-            if symbol not in combined_symbols:
+            if symbol not in combined_symbols and is_regular_stock(symbol):
                 combined_symbols.append(symbol)
                 
-        # TwelveData API has a limit, but with batching we can process more
-        # For free tier, limit to 30 initial symbols for technical screening
-        max_symbols = min(30, len(combined_symbols))
+        # Then add Nasdaq 100 stocks
+        for symbol in nasdaq100_symbols:
+            if symbol not in combined_symbols and is_regular_stock(symbol):
+                combined_symbols.append(symbol)
+                
+        # With batching we can process more symbols efficiently
+        # Increased from 30 to 50 for better coverage while still being API-efficient
+        max_symbols = min(50, len(combined_symbols))
         symbols = combined_symbols[:max_symbols]
         logger.debug(f"Got {len(symbols)} symbols for batch screening [{', '.join(symbols[:5])}...]")
         

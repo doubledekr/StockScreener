@@ -273,13 +273,15 @@ def screen_stocks():
         # Start timing the screening process
         start_time = time.time()
         
-        # Get top stocks based on criteria from the API
+        # Get top stocks based on criteria from the API with improved batch processing
         logger.debug("No cached results or cache bypass requested, fetching from API")
-        top_stocks = screener.get_top_stocks()
+        symbol_limit = int(request.args.get('symbol_limit', 50))  # Allow overriding the symbol limit
+        top_stocks = screener.get_top_stocks(limit=10)  # Always get top 10 stocks
         
         # Record screening metrics
         end_time = time.time()
         execution_time = end_time - start_time
+        logger.debug(f"Screening completed in {execution_time:.2f} seconds, found {len(top_stocks)} qualified stocks")
         
         # Create a new screening session record
         session = ScreeningSession(

@@ -1,0 +1,51 @@
+DEBUG:app:No cached results or cache bypass requested, fetching from API
+DEBUG:stock_screener:Got 30 symbols for batch screening [RSLS, BIAF, PDYNW, BIAFW, CURIW...]
+DEBUG:stock_screener:Starting technical batch screening for 30 symbols
+WARNING:stock_screener:Insufficient time series data for ZEOWW
+WARNING:stock_screener:Insufficient time series data for RZLVW
+DEBUG:stock_screener:12 symbols passed technical criteria
+DEBUG:stock_screener:Checking fundamentals for PDYNW
+WARNING:stock_screener:Insufficient quarterly data for PDYNW
+DEBUG:stock_screener:Checking fundamentals for CURIW
+WARNING:stock_screener:Insufficient quarterly data for CURIW
+DEBUG:stock_screener:Checking fundamentals for GATE
+WARNING:stock_screener:Insufficient quarterly data for GATE
+DEBUG:stock_screener:Checking fundamentals for MSSAW
+WARNING:stock_screener:Insufficient quarterly data for MSSAW
+DEBUG:stock_screener:Checking fundamentals for SATX
+DEBUG:stock_screener:Checking fundamentals for NUTX
+DEBUG:stock_screener:Checking fundamentals for MOBBW
+WARNING:stock_screener:Insufficient quarterly data for MOBBW
+DEBUG:stock_screener:Checking fundamentals for QSG
+DEBUG:stock_screener:Checking fundamentals for MMM
+DEBUG:stock_screener:Checking fundamentals for ABT
+DEBUG:stock_screener:Checking fundamentals for ABBV
+DEBUG:stock_screener:Checking fundamentals for AFL
+WARNING:stock_screener:No stocks qualified for the screening criteria
+DEBUG:app:Fetching market movers
+DEBUG:app:Using cached market movers
+DEBUG:app:Starting stock screening process
+DEBUG:app:No cached results or cache bypass requested, fetching from API
+DEBUG:stock_screener:Got 30 symbols for batch screening [RSLS, BIAF, PDYNW, BIAFW, CURIW...]
+DEBUG:stock_screener:Starting technical batch screening for 30 symbols
+WARNING:stock_screener:Insufficient time series data for ZEOWW
+WARNING:stock_screener:Insufficient time series data for RZLVW
+DEBUG:stock_screener:12 symbols passed technical criteria
+DEBUG:stock_screener:Checking fundamentals for PDYNW
+WARNING:stock_screener:Insufficient quarterly data for PDYNW
+DEBUG:stock_screener:Checking fundamentals for CURIW
+WARNING:stock_screener:Insufficient quarterly data for CURIW
+DEBUG:stock_screener:Checking fundamentals for GATE
+WARNING:stock_screener:Insufficient quarterly data for GATE
+DEBUG:stock_screener:Checking fundamentals for MSSAW
+WARNING:stock_screener:Insufficient quarterly data for MSSAW
+DEBUG:stock_screener:Checking fundamentals for SATX
+DEBUG:stock_screener:Checking fundamentals for NUTX
+DEBUG:stock_screener:Checking fundamentals for MOBBW
+WARNING:stock_screener:Insufficient quarterly data for MOBBW
+DEBUG:stock_screener:Checking fundamentals for QSG
+DEBUG:stock_screener:Checking fundamentals for MMM
+DEBUG:stock_screener:Checking fundamentals for ABT
+DEBUG:stock_screener:Checking fundamentals for ABBV
+DEBUG:stock_screener:Checking fundamentals for AFL
+WARNING:stock_screener:No stocks qualified for the screening criteria
