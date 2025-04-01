@@ -262,7 +262,7 @@ def screen_stocks():
                         ScreeningResult.stock_id == subquery.c.stock_id,
                         ScreeningResult.screening_date == subquery.c.max_date
                     )
-                ).join(Stock).order_by(ScreeningResult.score.desc()).limit(10).all()
+                ).join(Stock).order_by(ScreeningResult.score.desc()).limit(50).all()
             except Exception as e:
                 logger.error(f"Error getting cached screening results: {str(e)}")
                 # Fallback to a more basic query if the subquery approach fails
@@ -336,8 +336,8 @@ def screen_stocks():
         
         # Get top stocks based on criteria from the API with improved batch processing
         logger.debug("No cached results or cache bypass requested, fetching from API")
-        symbol_limit = int(request.args.get('symbol_limit', 50))  # Allow overriding the symbol limit
-        top_stocks = screener.get_top_stocks(limit=10)  # Always get top 10 stocks
+        symbol_limit = int(request.args.get('symbol_limit', 200))  # Allow overriding the symbol limit
+        top_stocks = screener.get_top_stocks(limit=50)  # Increased to get top 50 stocks
         
         # Record screening metrics
         end_time = time.time()
@@ -390,7 +390,8 @@ def screen_stocks():
                 estimated_sales_growth_positive=fund_data.get("estimated_sales_growth_positive", False),
                 estimated_eps_growth_positive=fund_data.get("estimated_eps_growth_positive", False),
                 score=stock_data.get("score", 0),
-                passes_all_criteria=True
+                passes_all_criteria=True,
+                meets_all_criteria=stock_data.get("meets_all_criteria", False)
             )
             
             # Set chart data
@@ -499,7 +500,8 @@ def get_stock_data(symbol):
                             "estimated_eps_growth_positive": bool(result.estimated_eps_growth_positive)
                         },
                         "chart_data": result.get_chart_data(),
-                        "passes_all_criteria": bool(result.passes_all_criteria)
+                        "passes_all_criteria": bool(result.passes_all_criteria),
+                        "meets_all_criteria": bool(result.meets_all_criteria)
                     }
                     
                     # Add fundamental metrics if available
@@ -542,7 +544,8 @@ def get_stock_data(symbol):
                 "company_name": api_stock_data.get("company_name", symbol),
                 "technical_data": {},
                 "fundamental_data": {},
-                "passes_all_criteria": bool(api_stock_data.get("passes_all_criteria", False))
+                "passes_all_criteria": bool(api_stock_data.get("passes_all_criteria", False)),
+                "meets_all_criteria": bool(api_stock_data.get("meets_all_criteria", False))
             }
             
             # Copy and convert technical data
