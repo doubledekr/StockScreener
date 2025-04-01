@@ -2,9 +2,49 @@ import os
 import logging
 import requests
 import json
-import numpy as np
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, request
+
+# Import dependencies with error handling
+try:
+    import numpy as np
+    from flask import Flask, render_template, jsonify, request
+except ImportError:
+    # Create dummy numpy module if imports fail
+    class NumpyDummy:
+        class integer: pass
+        class int64: pass
+        class int32: pass
+        class floating: pass
+        class float64: pass
+        class float32: pass
+        class ndarray: pass
+        class bool_: pass
+        
+        @staticmethod
+        def tolist(*args, **kwargs): 
+            return []
+    
+    np = NumpyDummy()
+    
+    # Create dummy Flask modules
+    class FlaskDummy:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    Flask = FlaskDummy
+    
+    def render_template(*args, **kwargs):
+        return ""
+    
+    def jsonify(*args, **kwargs):
+        return {}
+    
+    class RequestDummy:
+        args = {}
+        json = {}
+        method = "GET"
+        
+    request = RequestDummy()
 from stock_screener import StockScreener
 from models import db, Stock, PriceHistory, StockFundamentals, ScreeningResult, ScreeningSession
 import time
@@ -15,21 +55,21 @@ logger = logging.getLogger(__name__)
 
 # Custom JSON encoder to handle non-serializable types
 class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, o):
         # Handle numpy types
-        if isinstance(obj, (np.integer, np.int64, np.int32)):
-            return int(obj)
-        elif isinstance(obj, (np.floating, np.float64, np.float32)):
-            return float(obj)
-        elif isinstance(obj, (np.ndarray,)):
-            return obj.tolist()
-        elif isinstance(obj, (np.bool_)):
-            return bool(obj)
+        if isinstance(o, (np.integer, np.int64, np.int32)):
+            return int(o)
+        elif isinstance(o, (np.floating, np.float64, np.float32)):
+            return float(o)
+        elif isinstance(o, (np.ndarray,)):
+            return o.tolist()
+        elif isinstance(o, (np.bool_)):
+            return bool(o)
         # Handle datetime objects
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
+        elif isinstance(o, datetime):
+            return o.isoformat()
         # Let the base class handle other types or raise TypeError
-        return super(CustomJSONEncoder, self).default(obj)
+        return super(CustomJSONEncoder, self).default(o)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -206,6 +246,10 @@ def get_market_movers():
                                     fundamental.buy_ratings = int(fund_data.get('buy_ratings', 0)) if fund_data.get('buy_ratings') is not None else None
                                     fundamental.hold_ratings = int(fund_data.get('hold_ratings', 0)) if fund_data.get('hold_ratings') is not None else None
                                     fundamental.sell_ratings = int(fund_data.get('sell_ratings', 0)) if fund_data.get('sell_ratings') is not None else None
+                                
+                                # Store detailed analyst ratings if available
+                                if 'detailed_ratings' in fund_data:
+                                    fundamental.set_detailed_ratings(fund_data.get('detailed_ratings'))
                                 
                                 # Store the raw data for advanced metrics
                                 raw_data = {
@@ -813,7 +857,8 @@ def get_analyst_picks():
                     "analyst_count": fundamental.analyst_count,
                     "buy_ratings": fundamental.buy_ratings,
                     "hold_ratings": fundamental.hold_ratings,
-                    "sell_ratings": fundamental.sell_ratings
+                    "sell_ratings": fundamental.sell_ratings,
+                    "detailed_ratings": fundamental.get_detailed_ratings() if fundamental.detailed_ratings else []
                 },
                 "chart_data": result.get_chart_data()
             }
@@ -896,6 +941,10 @@ def refresh_premium_data():
                     fundamental.buy_ratings = r.get('buy_ratings')
                     fundamental.hold_ratings = r.get('hold_ratings') 
                     fundamental.sell_ratings = r.get('sell_ratings')
+                    
+                    # Store detailed ratings if available
+                    if 'detailed_ratings' in r:
+                        fundamental.set_detailed_ratings(r.get('detailed_ratings'))
                 
                 # Update last updated timestamp
                 fundamental.last_updated = datetime.utcnow()

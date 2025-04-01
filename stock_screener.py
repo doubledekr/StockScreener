@@ -1,10 +1,42 @@
 import logging
 import requests
-import pandas as pd
-import numpy as np
 import json
 from datetime import datetime, timedelta
 import time
+
+# Import pandas and numpy with error handling to avoid issues in environments without these packages
+try:
+    import pandas as pd
+    import numpy as np
+except ImportError:
+    # Create dummy np module with the types we use
+    class NumpyDummy:
+        class integer: pass
+        class int64: pass
+        class int32: pass
+        class floating: pass
+        class float64: pass
+        class float32: pass
+        class ndarray: pass
+        class bool_: pass
+        
+        @staticmethod
+        def tolist(*args, **kwargs): return []
+    
+    np = NumpyDummy()
+    
+    # Create dummy pd module with the functions we use
+    class PandasDummy:
+        @staticmethod
+        def notna(v): return v is not None
+        
+        class DataFrame:
+            def __init__(self): 
+                self.empty = True
+            
+            def reset_index(self, *args, **kwargs): return self
+    
+    pd = PandasDummy()
 
 logger = logging.getLogger(__name__)
 
@@ -470,6 +502,33 @@ class StockScreener:
                             'analyst_count': rating_data.get('numberOfAnalysts', 0),
                             'rating_score': rating_data.get('consensus', None)
                         }
+                        
+                        # Try to get detailed analyst ratings
+                        try:
+                            detailed_rating_params = {
+                                "symbol": symbol,
+                                "apikey": self.api_key,
+                                "outputsize": 30  # Get the most recent 30 ratings
+                            }
+                            detailed_rating_response = requests.get(f"{self.base_url}/analyst_ratings/light", params=detailed_rating_params, timeout=10)
+                            detailed_rating_data = detailed_rating_response.json()
+                            
+                            # Check if we got valid data
+                            if isinstance(detailed_rating_data, dict) and 'ratings' in detailed_rating_data:
+                                logger.debug(f"Retrieved detailed analyst ratings for {symbol}")
+                                # Store the detailed ratings
+                                fund_data['analyst_data']['detailed_ratings'] = detailed_rating_data['ratings']
+                            elif isinstance(detailed_rating_data, dict) and detailed_rating_data.get('code') == 429:
+                                logger.warning(f"Rate limit exceeded for detailed analyst ratings: {detailed_rating_data.get('message')}")
+                                self.cache['rate_limited'] = True
+                                self.cache['rate_limit_reset'] = time.time() + 60
+                            elif isinstance(detailed_rating_data, dict) and detailed_rating_data.get('code') in [401, 403]:
+                                logger.warning(f"Premium endpoint access denied for detailed analyst ratings: {detailed_rating_data.get('message')}")
+                            else:
+                                logger.warning(f"Unexpected response for detailed analyst ratings: {detailed_rating_data}")
+                        except Exception as e:
+                            logger.warning(f"Error fetching detailed analyst ratings for {symbol}: {str(e)}")
+                        
                     elif isinstance(rating_data, dict) and rating_data.get('code') == 429:
                         logger.warning(f"Rate limit exceeded for analyst ratings: {rating_data.get('message')}")
                         self.cache['rate_limited'] = True
@@ -520,17 +579,17 @@ class StockScreener:
                     }
                     logger.debug(f"Successfully got growth estimates for {symbol}")
                 else:
-                    # Default values if growth estimates are not available
+                    # If growth estimates are not available, use null values instead of defaulting to 5%
                     fund_data['estimates']['annual'] = {
-                        'eps_growth': 5.0,
-                        'revenue_growth': 5.0
+                        'eps_growth': None,
+                        'revenue_growth': None
                     }
             except Exception as e:
                 logger.warning(f"Could not get growth estimates for {symbol}: {str(e)}")
-                # Set default values if there's an error
+                # If there's an error getting growth estimates, set to null values
                 fund_data['estimates']['annual'] = {
-                    'eps_growth': 5.0,
-                    'revenue_growth': 5.0
+                    'eps_growth': None,
+                    'revenue_growth': None
                 }
             
             # Check if we hit the rate limit
@@ -671,6 +730,42 @@ class StockScreener:
                     logger.debug(f"Successfully got analyst recommendations for {symbol}")
             except Exception as e:
                 logger.warning(f"Could not get analyst recommendations for {symbol}: {str(e)}")
+                
+            # Try to get detailed analyst ratings from analyst_ratings/light endpoint
+            try:
+                params = {
+                    "symbol": symbol,
+                    "outputsize": 10,  # Get up to 10 latest ratings
+                    "apikey": self.api_key
+                }
+                response = requests.get(f"{self.base_url}/analyst_ratings/light", params=params, timeout=10)
+                ratings_data = response.json()
+                
+                # Check for rate limit
+                if isinstance(ratings_data, dict) and ratings_data.get('code') == 429:
+                    logger.warning(f"Rate limit exceeded: {ratings_data.get('message')}")
+                    self.cache['rate_limited'] = True
+                    self.cache['rate_limit_reset'] = time.time() + 60
+                    return None
+                
+                # Extract detailed ratings data if available (will be 401 if not subscribed to Ultra plan)
+                if response.status_code == 200 and 'ratings' in ratings_data and len(ratings_data['ratings']) > 0:
+                    # Store the individual analyst ratings
+                    detailed_ratings = []
+                    for rating in ratings_data['ratings']:
+                        detailed_ratings.append({
+                            'date': rating.get('date'),
+                            'firm': rating.get('firm'),
+                            'action': rating.get('rating_change'),
+                            'rating': rating.get('rating_current'),
+                            'prior_rating': rating.get('rating_prior')
+                        })
+                    
+                    # Add detailed ratings to the fund_data
+                    fund_data['analyst_data']['detailed_ratings'] = detailed_ratings
+                    logger.debug(f"Successfully got detailed analyst ratings for {symbol} ({len(detailed_ratings)} ratings)")
+            except Exception as e:
+                logger.warning(f"Could not get detailed analyst ratings for {symbol}: {str(e)}")
             
             # Check if we hit the rate limit
             if 'rate_limited' in self.cache and self.cache['rate_limited']:
@@ -1151,6 +1246,10 @@ class StockScreener:
                     'analyst_count': r.get('analyst_count', 0),
                     'rating_score': r.get('rating_score', 0)
                 }
+                
+                # Include detailed ratings if available
+                if 'detailed_ratings' in fundamental_obj['analyst_data']:
+                    analyst_ratings['detailed_ratings'] = fundamental_obj['analyst_data']['detailed_ratings']
         
         return {
             "symbol": symbol,

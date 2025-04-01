@@ -305,6 +305,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.analyst_ratings.sell_ratings !== undefined && data.analyst_ratings.sell_ratings !== null) {
                             fundamentalHTML += createMetricRow('Sell Ratings', data.analyst_ratings.sell_ratings);
                         }
+                        
+                        // Add detailed analyst ratings if available
+                        if (data.analyst_ratings.detailed_ratings && data.analyst_ratings.detailed_ratings.length > 0) {
+                            fundamentalHTML += `
+                                <tr>
+                                    <td colspan="2" class="pt-2">
+                                        <div class="small fw-bold mb-1">Recent Analyst Actions</div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Firm</th>
+                                                        <th>Action</th>
+                                                        <th>Rating</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${data.analyst_ratings.detailed_ratings.slice(0, 5).map(rating => `
+                                                        <tr>
+                                                            <td>${rating.date}</td>
+                                                            <td>${rating.firm}</td>
+                                                            <td>${rating.rating_change}</td>
+                                                            <td>${rating.rating_current}</td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }
                     } else {
                         fundamentalHTML += `<tr><td colspan="2" class="text-muted small">No analyst coverage available</td></tr>`;
                     }
@@ -611,12 +644,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     let analystRatings = 'N/A';
                     if (stock.analyst_ratings && stock.analyst_ratings.analyst_count > 0) {
                         analystRatings = `
-                            <div class="d-flex">
+                            <div class="d-flex mb-2">
                                 <span class="badge bg-success me-1">${stock.analyst_ratings.buy_ratings || 0} Buy</span>
                                 <span class="badge bg-secondary me-1">${stock.analyst_ratings.hold_ratings || 0} Hold</span>
                                 <span class="badge bg-danger">${stock.analyst_ratings.sell_ratings || 0} Sell</span>
                             </div>
                         `;
+                        
+                        // Add most recent analyst action if available
+                        if (stock.analyst_ratings.detailed_ratings && stock.analyst_ratings.detailed_ratings.length > 0) {
+                            const mostRecent = stock.analyst_ratings.detailed_ratings[0];
+                            analystRatings += `
+                                <div class="small text-muted mt-1">
+                                    Latest: ${mostRecent.firm} - ${mostRecent.rating_change} ${mostRecent.rating_current}
+                                </div>
+                            `;
+                        }
                     }
                     
                     row.innerHTML = `

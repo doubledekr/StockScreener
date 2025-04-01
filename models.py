@@ -1,30 +1,56 @@
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
-import numpy as np
+
+# Import flask_sqlalchemy and numpy with error handling
+try:
+    from flask_sqlalchemy import SQLAlchemy
+    import numpy as np
+except ImportError:
+    # Create dummy numpy module if imports fail
+    class NumpyDummy:
+        class integer: pass
+        class int64: pass
+        class int32: pass
+        class floating: pass
+        class float64: pass
+        class float32: pass
+        class ndarray: pass
+        class bool_: pass
+        
+        @staticmethod
+        def tolist(*args, **kwargs): 
+            return []
+    
+    np = NumpyDummy()
+    
+    class SQLAlchemyDummy:
+        def __init__(self, *args, **kwargs):
+            pass
+            
+    SQLAlchemy = SQLAlchemyDummy
 
 db = SQLAlchemy()
 
 # Custom JSON encoder for handling non-serializable types
 class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, o):
         # Handle numpy types
-        if isinstance(obj, (np.integer, np.int64, np.int32)):
-            return int(obj)
-        elif isinstance(obj, (np.floating, np.float64, np.float32)):
-            return float(obj)
-        elif isinstance(obj, (np.ndarray,)):
-            return obj.tolist()
-        elif isinstance(obj, (np.bool_)):
-            return bool(obj)
+        if isinstance(o, (np.integer, np.int64, np.int32)):
+            return int(o)
+        elif isinstance(o, (np.floating, np.float64, np.float32)):
+            return float(o)
+        elif isinstance(o, (np.ndarray,)):
+            return o.tolist()
+        elif isinstance(o, (np.bool_)):
+            return bool(o)
         # Handle datetime objects
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
+        elif isinstance(o, datetime):
+            return o.isoformat()
         # Handle native Python bool (for redundancy)
-        elif isinstance(obj, bool):
-            return bool(obj)
+        elif isinstance(o, bool):
+            return bool(o)
         # Let the base class handle other types or raise TypeError
-        return super(CustomJSONEncoder, self).default(obj)
+        return super(CustomJSONEncoder, self).default(o)
 
 class Stock(db.Model):
     """Model for storing basic stock information"""
@@ -82,6 +108,7 @@ class StockFundamentals(db.Model):
     buy_ratings = db.Column(db.Integer)        # Number of buy ratings
     hold_ratings = db.Column(db.Integer)       # Number of hold ratings
     sell_ratings = db.Column(db.Integer)       # Number of sell ratings
+    detailed_ratings = db.Column(db.Text)      # JSON string with individual analyst firm ratings and recommendations
     
     # Raw JSON data for flexibility
     raw_data = db.Column(db.Text)
@@ -96,6 +123,17 @@ class StockFundamentals(db.Model):
         """Store the raw fundamental data as a JSON string"""
         if data_dict:
             self.raw_data = json.dumps(data_dict, cls=CustomJSONEncoder)
+    
+    def get_detailed_ratings(self):
+        """Convert the stored JSON string of detailed ratings back to a list"""
+        if self.detailed_ratings:
+            return json.loads(self.detailed_ratings)
+        return []
+    
+    def set_detailed_ratings(self, ratings_list):
+        """Store the detailed ratings as a JSON string"""
+        if ratings_list:
+            self.detailed_ratings = json.dumps(ratings_list, cls=CustomJSONEncoder)
     
     def __repr__(self):
         return f'<StockFundamentals {self.stock.symbol}>'
