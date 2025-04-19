@@ -740,7 +740,8 @@ class StockScreener:
                 if isinstance(price_target_data, dict) and price_target_data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {price_target_data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                 
                 # Extract price target data if available (will be 401 if not subscribed to Ultra plan)
@@ -782,7 +783,8 @@ class StockScreener:
                 if isinstance(recommendations_data, dict) and recommendations_data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {recommendations_data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                 
                 # Extract recommendations data if available (will be 401 if not subscribed to Ultra plan)
@@ -823,7 +825,8 @@ class StockScreener:
                 if isinstance(ratings_data, dict) and ratings_data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {ratings_data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                 
                 # Extract detailed ratings data if available (will be 401 if not subscribed to Ultra plan)
@@ -863,7 +866,8 @@ class StockScreener:
                     if isinstance(stats_data, dict) and stats_data.get('code') == 429:
                         logger.warning(f"Rate limit exceeded: {stats_data.get('message')}")
                         self.cache['rate_limited'] = True
-                        self.cache['rate_limit_reset'] = time.time() + 60
+                        self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                        logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                         return None
                     
                     if response.status_code == 200:
