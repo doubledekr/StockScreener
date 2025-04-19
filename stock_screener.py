@@ -320,8 +320,8 @@ class StockScreener:
         results = {}
             
         try:
-            # Check if we're already rate limited
-            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+            # Check if we're rate limited using the helper method
+            if self._check_rate_limit_and_reset():
                 logger.warning(f"Skipping API call for batch of {len(symbols)} symbols due to rate limit")
                 return {}
             
@@ -428,8 +428,8 @@ class StockScreener:
     def _fetch_time_series(self, symbol, interval="1day", outputsize=365):
         """Fetch time series data for a single symbol"""
         try:
-            # Check if we're already rate limited
-            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+            # Check if we're rate limited using the helper method
+            if self._check_rate_limit_and_reset():
                 logger.warning(f"Skipping API call for {symbol} due to rate limit")
                 return None
                 
@@ -487,8 +487,8 @@ class StockScreener:
     def _fetch_fundamentals(self, symbol):
         """Fetch fundamental data for a symbol"""
         try:
-            # Check if we're already rate limited
-            if 'rate_limited' in self.cache and self.cache['rate_limited']:
+            # Check if we're rate limited using the helper method
+            if self._check_rate_limit_and_reset():
                 logger.warning(f"Skipping fundamental API calls for {symbol} due to rate limit")
                 return None
                 
@@ -519,7 +519,8 @@ class StockScreener:
                 if isinstance(data, dict) and data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                     
                 # Try to get price targets data from the price-target endpoint
@@ -544,7 +545,8 @@ class StockScreener:
                     elif isinstance(pt_data, dict) and pt_data.get('code') == 429:
                         logger.warning(f"Rate limit exceeded for price targets: {pt_data.get('message')}")
                         self.cache['rate_limited'] = True
-                        self.cache['rate_limit_reset'] = time.time() + 60
+                        self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                        logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     elif isinstance(pt_data, dict) and pt_data.get('code') in [401, 403]:
                         logger.warning(f"Premium endpoint access denied for price targets: {pt_data.get('message')}")
                     else:
@@ -593,7 +595,8 @@ class StockScreener:
                             elif isinstance(detailed_rating_data, dict) and detailed_rating_data.get('code') == 429:
                                 logger.warning(f"Rate limit exceeded for detailed analyst ratings: {detailed_rating_data.get('message')}")
                                 self.cache['rate_limited'] = True
-                                self.cache['rate_limit_reset'] = time.time() + 60
+                                self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                                logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                             elif isinstance(detailed_rating_data, dict) and detailed_rating_data.get('code') in [401, 403]:
                                 logger.warning(f"Premium endpoint access denied for detailed analyst ratings: {detailed_rating_data.get('message')}")
                             else:
@@ -604,7 +607,8 @@ class StockScreener:
                     elif isinstance(rating_data, dict) and rating_data.get('code') == 429:
                         logger.warning(f"Rate limit exceeded for analyst ratings: {rating_data.get('message')}")
                         self.cache['rate_limited'] = True
-                        self.cache['rate_limit_reset'] = time.time() + 60
+                        self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                        logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     elif isinstance(rating_data, dict) and rating_data.get('code') in [401, 403]:
                         logger.warning(f"Premium endpoint access denied for analyst ratings: {rating_data.get('message')}")
                     else:
@@ -634,7 +638,8 @@ class StockScreener:
                 if isinstance(growth_data, dict) and growth_data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {growth_data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                 
                 # Extract growth estimates from the response
@@ -681,7 +686,8 @@ class StockScreener:
                 if isinstance(earnings_data, dict) and earnings_data.get('code') == 429:
                     logger.warning(f"Rate limit exceeded: {earnings_data.get('message')}")
                     self.cache['rate_limited'] = True
-                    self.cache['rate_limit_reset'] = time.time() + 60
+                    self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                    logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                     return None
                 
                 if response.status_code == 200:
