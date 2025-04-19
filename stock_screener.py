@@ -68,6 +68,19 @@ class StockScreener:
         self.base_url = "https://api.twelvedata.com"
         self.cache = {}
         self.cache_timeout = 3600  # 1 hour cache to avoid excessive API calls
+        self.all_stocks_cache_timeout = 86400 * 7  # 7 days cache for all stocks list
+        self.rate_limit_backoff = 300  # 5 minute backoff when rate limited
+        
+    def _check_rate_limit_and_reset(self):
+        """Check if rate limited and reset if time has passed"""
+        if 'rate_limited' in self.cache and self.cache['rate_limited']:
+            # Check if enough time has passed to clear the rate limit
+            if 'rate_limit_reset' in self.cache and time.time() > self.cache['rate_limit_reset']:
+                logger.info("Rate limit reset time has passed, clearing rate limit flag")
+                self.cache['rate_limited'] = False
+                return False
+            return True
+        return False
 
     def _get_market_movers(self):
         """Get market movers from TwelveData API"""
@@ -225,11 +238,11 @@ class StockScreener:
     def _get_all_us_stocks(self):
         """Get all US stocks from TwelveData API"""
         try:
-            # Check cache first
+            # Check cache first - use longer cache timeout for all_us_stocks
             cache_key = "all_us_stocks"
-            if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.cache_timeout):
+            if cache_key in self.cache and (time.time() - self.cache[cache_key]['timestamp'] < self.all_stocks_cache_timeout):
                 stock_count = len(self.cache[cache_key]['data'])
-                logger.info(f"Using cached US stocks list with {stock_count} symbols")
+                logger.info(f"Using cached US stocks list with {stock_count} symbols (cache valid for 7 days)")
                 return self.cache[cache_key]['data']
                 
             # Build URL to get all US stocks
@@ -263,7 +276,7 @@ class StockScreener:
                     return symbols
             
             # If we get here, the stocks endpoint failed or returned no data
-            logger.warning("❌ US stocks API failed (status code: {response.status_code}), falling back to index stocks")
+            logger.warning(f"❌ US stocks API failed (status code: {response.status_code}), falling back to index stocks")
             # Fall back to S&P 500, NASDAQ 100 and Russell 2000
             combined_symbols = self._get_sp500_symbols() + self._get_nasdaq100_symbols() + self._get_russell2000_symbols()
             # Remove duplicates
@@ -346,8 +359,9 @@ class StockScreener:
                 logger.warning(f"Rate limit exceeded: {data.get('message')}")
                 # Mark that we've hit the rate limit to avoid further calls
                 self.cache['rate_limited'] = True
-                # Reset the rate limit flag after 60 seconds (typical rate limit window)
-                self.cache['rate_limit_reset'] = time.time() + 60
+                # Reset the rate limit flag after our configured backoff time
+                self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                 return results
             
             # Process the data - if single symbol, convert to expected format
@@ -439,8 +453,9 @@ class StockScreener:
                 logger.warning(f"Rate limit exceeded: {data.get('message')}")
                 # Mark that we've hit the rate limit to avoid further calls
                 self.cache['rate_limited'] = True
-                # Reset the rate limit flag after 60 seconds (typical rate limit window)
-                self.cache['rate_limit_reset'] = time.time() + 60
+                # Reset the rate limit flag after our configured backoff time
+                self.cache['rate_limit_reset'] = time.time() + self.rate_limit_backoff
+                logger.info(f"Rate limiting in effect for {self.rate_limit_backoff} seconds to prevent API throttling")
                 return None
                 
             # Check for valid data
