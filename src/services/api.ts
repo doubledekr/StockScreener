@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   Stock, 
@@ -23,7 +23,7 @@ class ApiService {
 
   private async makeRequest<T>(url: string, params: Record<string, any> = {}): Promise<ApiResponse<T>> {
     try {
-      const response: AxiosResponse<T> = await axios.get(url, {
+      const response = await axios.get(url, {
         params: {
           ...params,
           apikey: this.apiKey,
@@ -32,7 +32,7 @@ class ApiService {
       });
 
       return {
-        data: response.data,
+        data: response.data as T,
         success: true,
       };
     } catch (error: any) {
@@ -332,7 +332,7 @@ class ApiService {
       return { data: chartData, success: true };
     }
     
-    return timeSeriesResponse;
+    return { error: 'Failed to get chart data', success: false };
   }
 }
 
