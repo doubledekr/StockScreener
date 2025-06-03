@@ -162,21 +162,21 @@ export const StockDetailScreen: React.FC<StockDetailScreenProps> = ({ route, nav
                   styles.criteriaIndicator,
                   { backgroundColor: stock.screening_result.price_above_sma200 ? '#4CAF50' : '#F44336' }
                 ]} />
-                <Text style={styles.criteriaText}>Price > SMA200</Text>
+                <Text style={styles.criteriaText}>Price above SMA200</Text>
               </View>
               <View style={styles.criteriaItem}>
                 <View style={[
                   styles.criteriaIndicator,
                   { backgroundColor: stock.screening_result.sma50_above_sma200 ? '#4CAF50' : '#F44336' }
                 ]} />
-                <Text style={styles.criteriaText}>SMA50 > SMA200</Text>
+                <Text style={styles.criteriaText}>SMA50 above SMA200</Text>
               </View>
               <View style={styles.criteriaItem}>
                 <View style={[
                   styles.criteriaIndicator,
                   { backgroundColor: stock.screening_result.sma100_above_sma200 ? '#4CAF50' : '#F44336' }
                 ]} />
-                <Text style={styles.criteriaText}>SMA100 > SMA200</Text>
+                <Text style={styles.criteriaText}>SMA100 above SMA200</Text>
               </View>
             </View>
 
